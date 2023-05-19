@@ -6,6 +6,8 @@ from torch.utils.data import Dataset
 
 """ Function used to import data from csv files. """
 def get_data(data_path, seq_len, verbose=False):
+    print(f"\nLoading data...")
+
     # import data into dataframe
     df_train = pd.read_csv(os.path.join(data_path, "training_ready.csv"))
     df_valid = pd.read_csv(os.path.join(data_path, "validation_ready.csv"))

@@ -14,7 +14,8 @@ import torch.nn as nn
 """ Class form LSTM in Autoencoder configuration. """
 class EncoderDecoderLSTM(nn.Module):
     """ Initialize configurations. """
-    def __init__(self, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, num_layers, device, bidirectional=False):
+    def __init__(self, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, num_layers, 
+                 device, weights_init=True, bidirectional=False):
         super(EncoderDecoderLSTM, self).__init__()
         # the number of expected features in the input x
         self.enc_input_size = enc_input_size
@@ -43,7 +44,8 @@ class EncoderDecoderLSTM(nn.Module):
                                     num_layers=num_layers,
                                     batch_first=True)
         
-        # self._reinitialize()
+        if weights_init:
+            self._reinitialize()
 
     """ Tensorflow/Keras-like initialization. """
     def _reinitialize(self):    
@@ -76,15 +78,15 @@ class EncoderDecoderLSTM(nn.Module):
         # print(f"\ninput: \n{x}")
 
         batch_size = x.size(0)
-        """ (D ∗ num_layers, batch_size, hidden_size) """
+        """ (D*num_layers, batch_size, hidden_size) """
         h_0 = torch.zeros((self.directions * self.num_layers,
                            batch_size, self.enc_hidden_size)).to(self.device)
         c_0 = torch.zeros((self.directions * self.num_layers,
                            batch_size, self.enc_hidden_size)).to(self.device)
 
         """ output-shape (batch_size, sequence_lenght, D * hidden_size)
-        h_n-shape (D * num_layers, batch_size, hidden_size)
-        c_n-shape (D * num_layers, batch_size, hidden_size) """
+        h_n-shape (D*num_layers, batch_size, hidden_size)
+        c_n-shape (D*num_layers, batch_size, hidden_size) """
         enc_output, (h_n, c_n) = self.lstm_encoder(x, (h_0, c_0))
 
         # print(f"\nh_n-shape: \n{h_n.shape}")
@@ -97,15 +99,15 @@ class EncoderDecoderLSTM(nn.Module):
         # print(f"\nenc-output: \n{enc_output}")
 
         batch_size = enc_output.size(0)
-        """ (D ∗ num_layers, batch_size, hidden_size) """
+        """ (D*num_layers, batch_size, hidden_size) """
         h_0 = torch.zeros((self.directions * self.num_layers,
                            batch_size, self.dec_hidden_size)).to(self.device)
         c_0 = torch.zeros((self.directions * self.num_layers,
                            batch_size, self.dec_hidden_size)).to(self.device)
 
         """ output-shape (batch_size, sequence_lenght, D * hidden_size)
-        h_n-shape (D * num_layers, batch_size, hidden_size)
-        c_n-shape (D * num_layers, batch_size, hidden_size) """
+        h_n-shape (D*num_layers, batch_size, hidden_size)
+        c_n-shape (D*num_layers, batch_size, hidden_size) """
         dec_output, (_, _) = self.lstm_decoder(enc_output, (h_0, c_0))
 
         # print(f"\ndec-output-shape: \n{dec_output.shape}")
@@ -118,13 +120,23 @@ if __name__ == "__main__":
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     print(f"\ndevice: \n{device}")
 
-    batch_size = 1 # 2
+    batch_size = 32
     seq_len = 5
+    num_features = 18
+    
     enc_input_size = 18
     dec_input_size = 5
     enc_hidden_size = 5
     dec_hidden_size = 18
     num_layers = 1
+
+    # # other dimensions
+    # enc_input_size = 18
+    # dec_input_size = 18
+    # enc_hidden_size = 18
+    # dec_hidden_size = 18
+    # num_layers = 1
+
     x = torch.rand((batch_size, seq_len, num_features))
 
     # model definition
@@ -136,16 +148,4 @@ if __name__ == "__main__":
                                device=device)        
     # model output
     enc_output, dec_output = model(x)
-
-    
-
-
-    # # other dimensions
-    # batch_size = 2  # 32
-    # seq_len = 5
-    # enc_input_size = 18
-    # dec_input_size = 18 #5
-    # enc_hidden_size = 18
-    # dec_hidden_size = 18
-    # num_layers = 1
 """

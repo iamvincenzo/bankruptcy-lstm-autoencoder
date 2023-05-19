@@ -36,10 +36,10 @@ def get_args():
     #######################################################################################
     parser.add_argument("--enc_input_size", type=int, default=18,
                         help="the number of expected features in the input x")
-    parser.add_argument("--dec_input_size", type=int, default=5,
-                        help="the number of expected features in the output of the encoder")
-    parser.add_argument("--enc_hidden_size", type=int, default=5,
+    parser.add_argument("--enc_hidden_size", type=int, default=18, # 5,
                         help="the number of features in the hidden state h of the encoder")
+    parser.add_argument("--dec_input_size", type=int, default=18, # 5,
+                        help="the number of expected features in the output of the encoder")
     parser.add_argument("--dec_hidden_size", type=int, default=18,
                         help="the number of features in the hidden state h of the decoder")
     parser.add_argument("--num_layers", type=int, default=1,
@@ -80,8 +80,8 @@ def get_args():
     #######################################################################################
 
     #######################################################################################
-    # parser.add_argument("--weights_init", action="store_true", # default=True, 
-    #                     help="determines whether to use weights initialization")
+    parser.add_argument("--weights_init", action="store_true", default=True, 
+                        help="determines whether to use weights initialization")
     #######################################################################################
 
     return parser.parse_args()
@@ -90,8 +90,7 @@ def get_args():
 def main(args):
     # tensorboard specifications
     t_date = "_" + datetime.now().strftime("%d%m%Y-%H%M%S")
-    writer = SummaryWriter(os.path.join("./runs", args.run_name, t_date))
-    # writer = SummaryWriter("./runs" + args.run_name + t_date)
+    writer = SummaryWriter("./runs/" + args.run_name + t_date)
 
     # get the data as numpy arrays
     np_train, np_valid, np_test = get_data(data_path=args.data_path, 
@@ -120,7 +119,8 @@ def main(args):
                                enc_hidden_size=args.enc_hidden_size, 
                                dec_hidden_size=args.dec_hidden_size,
                                num_layers=args.num_layers, 
-                               device=device)
+                               device=device,
+                               weights_init=args.weights_init)
     
     # solver for training, validation and test 
     solver = Solver(model=model, 
