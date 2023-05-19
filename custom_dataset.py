@@ -1,9 +1,53 @@
+import os
 import torch
+import numpy as np
+import pandas as pd
 from torch.utils.data import Dataset
-from torchvision import datasets
-from torchvision.transforms import ToTensor
-import matplotlib.pyplot as plt
 
+""" Function used to import data from csv files. """
+def get_data(data_path):
+    # import data into dataframe
+    df_train = pd.read_csv(os.path.join(data_path, "training_ready.csv"))
+    df_valid = pd.read_csv(os.path.join(data_path, "validation_ready.csv"))
+    df_test = pd.read_csv(os.path.join(data_path, "test_ready.csv"))
+
+    # remove 'failed' company from the data
+    df_train = df_train[df_train.status_label == 'alive']
+    df_valid = df_valid[df_valid.status_label == 'alive']
+    df_test = df_test[df_test.status_label == 'alive']
+
+    # remove useless columns
+    df_train.drop(columns=["fyear", "cik", "status_label", "status"], inplace=True)
+    df_valid.drop(columns=["fyear", "cik", "status_label", "status"], inplace=True)
+    df_test.drop(columns=["fyear", "cik", "status_label", "status"], inplace=True)
+
+    # # print for debugging
+    # print(f"\ndf_train: \n{df_train.head(5)}\n")
+    # print(f"\ndf_valid: \n{df_valid.head(5)}")
+    # print(f"\ndf_test: \n{df_test.head(5)}")
+
+    # print(f"\ndf_train-shape: \n{df_train.shape}")
+    # print(f"\ndf_valid-shape: \n{df_valid.shape}")
+    # print(f"\ndf_test-shape: \n{df_test.shape}")
+
+    # print(f"\ntotal train-samples: \n{df_train.shape[0]//args.seq_len}")
+    # print(f"\ntotal valid-samples: \n{df_valid.shape[0]//args.seq_len}")
+    # print(f"\ntotal test-samples: \n{df_test.shape[0]//args.seq_len}")
+
+    # convert data into numpy array
+    np_train = df_train.to_numpy(copy=False, dtype=np.float32)
+    np_valid = df_valid.to_numpy(copy=False, dtype=np.float32)
+    np_test = df_test.to_numpy(copy=False, dtype=np.float32)
+
+    # # print for debugging
+    # print(f"\nnp_train-shape: \n{np_train.shape}")
+    # print(f"\nnp_valid-shape: \n{np_valid.shape}")
+    # print(f"\nnp_test-shape: \n{np_test.shape}")
+
+    return np_train, np_valid, np_test
+
+
+""" Custom class used to create the training, validation and test sets. """
 class CustomDataset(Dataset):
     def __init__(self, x, seq_len):
         super().__init__()
