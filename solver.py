@@ -34,7 +34,12 @@ class Solver(object):
         self.valid_loader = valid_loader
         self.test_loader = test_loader
         self.writer = writer
-        self.device = device       
+        self.device = device
+
+        # visualize the model we built on tensorboard
+        X = next(iter(self.train_loader))
+        self.writer.add_graph(self.model, X.to(self.device))
+        self.writer.close()       
 
     """ Method used to load a model. """
     def load_model(self, device):
