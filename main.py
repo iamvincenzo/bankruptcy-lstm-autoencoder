@@ -6,8 +6,8 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter 
 
 from solver import Solver
-from model import EncoderDecoderLSTM
 from custom_dataset import get_data
+from model import EncoderDecoderLSTM
 from custom_dataset import CustomDataset
 
 """ Function used to get command line parameters. """
