@@ -11,6 +11,7 @@ from models import DenseSoftmaxLayer
 from models import EncoderDecoderLSTM
 from custom_dataset import CustomDataset
 
+
 """ Function used to get command line parameters. """
 def get_args():
     parser = ArgumentParser()

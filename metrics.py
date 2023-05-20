@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 """ Calculation of matrix distance as in scikit-learn but on rows. 
     Do the average for row (and so for year). """
 class Rec_Loss(nn.Module):

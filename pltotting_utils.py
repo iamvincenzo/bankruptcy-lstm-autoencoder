@@ -4,6 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 """ Function used to set some style configurations. """
 def set_default(figsize=(10, 10), dpi=100):
     # set the 'Solarize_Light2' default style
@@ -23,6 +24,7 @@ def set_default(figsize=(10, 10), dpi=100):
     # plt.rc('axes', facecolor='k')
     # plt.rc('figure', facecolor='k')
     # plt.rc('figure', figsize=figsize, dpi=dpi)
+
 
 """ Function used to visualize the training and validation loss. 
     The function also adds a vertical dashed line to the plot to 

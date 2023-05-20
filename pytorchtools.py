@@ -9,6 +9,7 @@ import torch
 # # setting the seeds for reproducibility
 # set_seed(seed=42)
 
+
 class EarlyStopping:
     """ Early stops the training if validation loss doesn't improve after a given patience. """
     def __init__(self, patience=7, verbose=False, delta=0, path="checkpoint.pt", trace_func=print):

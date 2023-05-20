@@ -11,6 +11,7 @@
 import torch
 import torch.nn as nn
 
+
 """ Class form LSTM in Encoder-Decoder configuration. """
 class EncoderDecoderLSTM(nn.Module):
     """ Initialize configurations. """
