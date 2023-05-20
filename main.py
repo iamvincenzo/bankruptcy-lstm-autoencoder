@@ -34,9 +34,9 @@ def get_args():
     #######################################################################################
     parser.add_argument("--enc_input_size", type=int, default=18,
                         help="the number of expected features in the input x")
-    parser.add_argument("--enc_hidden_size", type=int, default=18, # 5,
+    parser.add_argument("--enc_hidden_size", type=int, default= 5, #18,
                         help="the number of features in the hidden state h of the encoder")
-    parser.add_argument("--dec_input_size", type=int, default=18, # 5,
+    parser.add_argument("--dec_input_size", type=int, default=5, # 18,
                         help="the number of expected features in the output of the encoder")
     parser.add_argument("--dec_hidden_size", type=int, default=18,
                         help="the number of features in the hidden state h of the decoder")
@@ -60,10 +60,11 @@ def get_args():
                         help="the random seed used to ensure reproducibility")
     parser.add_argument("--lr", type=float, default=0.001, # default=0.0001,
                         help="the learning rate for optimization")
-    # parser.add_argument("--loss", type=str, default="dc_loss",
-    #                     choices=["dc_loss", "jac_loss", "bcewl_loss", "custom_loss"],
-    #                     help="the loss function used for model optimization")
-    parser.add_argument("--opt", type=str, default="Adam", choices=["SGD", "Adam"],
+    parser.add_argument("--loss", type=str, default="rec_loss",
+                        choices=["rec_loss", "mse_loss"],
+                        help="the loss function used for model optimization")
+    parser.add_argument("--opt", type=str, default="Adam", 
+                        choices=["SGD", "Adam"],
                         help="the optimizer used for training")
     parser.add_argument("--patience", type=int, default=30, 
                         help="the threshold for early stopping during training")

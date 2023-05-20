@@ -5,9 +5,10 @@ import torch.nn as nn
 from tqdm import tqdm
 import torch.optim as optim
 
-from metrics import custom_loss
+from metrics import Rec_Loss
 from pytorchtools import EarlyStopping
 from pltotting_utils import plot_losses
+
 
 
 """ Class for training, validation and testing. """
@@ -24,9 +25,19 @@ class Solver(object):
         if self.args.resume_train:
             self.model = self.load_model(device)
 
-        self.criterion = nn.MSELoss()
-        self.optimizer = optim.Adam(params=self.model.parameters(), 
-                                    lr=self.args.lr, betas=(0.9, 0.999))
+        # select the loss for optimization
+        if self.args.loss == "rec_loss":
+            self.criterion = Rec_Loss()
+        elif self.args.loss == "mse_loss":
+            self.criterion = nn.MSELoss()
+        
+        # choose the optimizer
+        if self.args.opt == "Adam":
+            self.optimizer = optim.Adam(params=self.model.parameters(), 
+                                        lr=self.args.lr, betas=(0.9, 0.999))
+        elif self.args.opt == "SGD":
+            self.optimizer = optim.SGD(params=self.model.parameters(),
+                                       lr=self.args.lr, momentum=0.9)
 
         self.num_epochs = args.num_epochs
         self.patience = self.args.patience
