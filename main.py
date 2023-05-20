@@ -158,7 +158,6 @@ def main(args):
         solver.train_all()
 
 
-
 """ Runs the simulation. """
 if __name__ == "__main__":
     args = get_args()
