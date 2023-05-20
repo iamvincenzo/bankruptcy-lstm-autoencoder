@@ -56,7 +56,7 @@ def get_args():
 
     # training-parameters (1)
     #######################################################################################
-    parser.add_argument("--num_epochs", type=int, default=20,
+    parser.add_argument("--num_epochs", type=int, default=3000, # 20,
                         help="the total number of training epochs")
     parser.add_argument("--batch_size", type=int, default=32,
                         help="the batch size for training and test data")
