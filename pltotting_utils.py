@@ -25,7 +25,6 @@ def set_default(figsize=(10, 10), dpi=100):
     # plt.rc('figure', facecolor='k')
     # plt.rc('figure', figsize=figsize, dpi=dpi)
 
-
 """ Function used to visualize the training and validation loss. 
     The function also adds a vertical dashed line to the plot to 
     indicate the early stopping checkpoint. """
