@@ -65,10 +65,10 @@ class CustomDataset(Dataset):
         # extract the first 18 columms
         data_x = self.x[start_index:end_index, :-1]
         # extract the last (19) column
-        data_y = self.x[start_index:end_index, -1:]
+        data_y = self.x[start_index, -1:]
 
         tensor_x = torch.from_numpy(data_x)
-        tensor_y = torch.from_numpy(data_y)
+        tensor_y = torch.from_numpy(np.array([data_y, 1-data_y]))
 
         return tensor_x, tensor_y
 

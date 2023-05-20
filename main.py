@@ -35,7 +35,7 @@ def get_args():
     #######################################################################################
     parser.add_argument("--run_name", type=str, default="run_0",
                         help="the name assigned to the current run")
-    parser.add_argument("--model_name", type=str, default="simple_net",
+    parser.add_argument("--model_name", type=str, default="alive_ae",
                         help="the name of the model to be saved or loaded")
     #######################################################################################
 
@@ -55,7 +55,7 @@ def get_args():
 
     # training-parameters (1)
     #######################################################################################
-    parser.add_argument("--num_epochs", type=int, default=10,
+    parser.add_argument("--num_epochs", type=int, default=20,
                         help="the total number of training epochs")
     parser.add_argument("--batch_size", type=int, default=32,
                         help="the batch size for training and test data")
