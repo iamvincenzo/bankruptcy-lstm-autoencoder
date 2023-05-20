@@ -10,7 +10,6 @@ from pytorchtools import EarlyStopping
 from pltotting_utils import plot_losses
 
 
-
 """ Class for training, validation and testing. """
 class Solver(object):
     """ Initialize configuration. """
