@@ -5,7 +5,7 @@ import pandas as pd
 from torch.utils.data import Dataset
 
 """ Function used to import data from csv files. """
-def get_data(data_path, seq_len, verbose=False):
+def get_data(data_path, seq_len, train_only_autoenc, verbose=False):
     print(f"\nLoading data...")
 
     # import data into dataframe
@@ -13,15 +13,20 @@ def get_data(data_path, seq_len, verbose=False):
     df_valid = pd.read_csv(os.path.join(data_path, "validation_ready.csv"))
     df_test = pd.read_csv(os.path.join(data_path, "test_ready.csv"))
 
-    # remove 'failed' company from the data
-    df_train = df_train[df_train.status_label == 'alive']
-    df_valid = df_valid[df_valid.status_label == 'alive']
-    df_test = df_test[df_test.status_label == 'alive']
-
-    # remove useless columns
-    df_train.drop(columns=["fyear", "cik", "status_label", "status"], inplace=True)
-    df_valid.drop(columns=["fyear", "cik", "status_label", "status"], inplace=True)
-    df_test.drop(columns=["fyear", "cik", "status_label", "status"], inplace=True)
+    if train_only_autoenc:
+        # remove 'failed' company from the data
+        df_train = df_train[df_train.status_label == 'alive']
+        df_valid = df_valid[df_valid.status_label == 'alive']
+        df_test = df_test[df_test.status_label == 'alive']
+        # remove useless columns
+        df_train.drop(columns=["fyear", "cik", "status_label", "status"], inplace=True)
+        df_valid.drop(columns=["fyear", "cik", "status_label", "status"], inplace=True)
+        df_test.drop(columns=["fyear", "cik", "status_label", "status"], inplace=True)
+    else:
+        # remove useless columns
+        df_train.drop(columns=["fyear", "cik", "status_label"], inplace=True)
+        df_valid.drop(columns=["fyear", "cik", "status_label"], inplace=True)
+        df_test.drop(columns=["fyear", "cik", "status_label"], inplace=True)
 
     if verbose:
         print(f"\ndf_train: \n{df_train.head(5)}\n")
@@ -51,7 +56,7 @@ def get_data(data_path, seq_len, verbose=False):
 
 """ Custom class used to create the training, validation and test sets. """
 class CustomDataset(Dataset):
-    def __init__(self, x, seq_len):
+    def __init__(self, x, seq_len, train_only_autoenc):
         super().__init__()
         self.x = x
         self.seq_len = seq_len
@@ -66,3 +71,11 @@ class CustomDataset(Dataset):
 
     def __len__(self):
         return len(self.x) // self.seq_len
+    
+
+if __name__ == "__main__":
+    # get the data as numpy arrays
+    np_train, np_valid, np_test = get_data(data_path="./data", 
+                                           seq_len=5, 
+                                           train_only_autoenc=False, 
+                                           verbose=True)

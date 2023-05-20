@@ -9,7 +9,8 @@ from metrics import Rec_Loss
 from pytorchtools import EarlyStopping
 from pltotting_utils import plot_losses
 
-
+from models import EncoderDecoderLSTM
+from models import DenseSoftmaxLayer
 
 """ Class for training, validation and testing. """
 class Solver(object):
@@ -19,26 +20,29 @@ class Solver(object):
         self.args = args
         self.model_name = f"lstm_encdec_{self.args.model_name}.pt"
 
-        self.model = model.to(device)
+        # PART-1
+        ###################################################################
+        self.autoencoder = model.to(device)
 
         # load a pretrained model
         if self.args.resume_train:
-            self.model = self.load_model(device)
+            self.load_model(self.autoencoder, device)
 
         # select the loss for optimization
         if self.args.loss == "rec_loss":
             self.criterion = Rec_Loss()
         elif self.args.loss == "mse_loss":
             self.criterion = nn.MSELoss()
-        
+
         # choose the optimizer
         if self.args.opt == "Adam":
-            self.optimizer = optim.Adam(params=self.model.parameters(), 
+            self.optimizer = optim.Adam(params=self.autoencoder.parameters(),
                                         lr=self.args.lr, betas=(0.9, 0.999))
         elif self.args.opt == "SGD":
-            self.optimizer = optim.SGD(params=self.model.parameters(),
+            self.optimizer = optim.SGD(params=self.autoencoder.parameters(),
                                        lr=self.args.lr, momentum=0.9)
 
+        self.num_classes = self.args.num_classes
         self.num_epochs = args.num_epochs
         self.patience = self.args.patience
         self.train_loader = train_loader
@@ -48,20 +52,42 @@ class Solver(object):
         self.device = device
 
         # visualize the model we built on tensorboard
-        X = next(iter(self.train_loader))
-        self.writer.add_graph(self.model, X.to(self.device))
-        self.writer.close()       
+        x = next(iter(self.train_loader))
+        self.writer.add_graph(self.autoencoder, x.to(self.device))
+        self.writer.close()
+        ###################################################################
+
+        # PART-2
+        ###################################################################    
+        input_dim = x.size(2) * x.size(1)
+        output_dim = x.size(1)
+        self.dense90 = DenseSoftmaxLayer(input_dim=input_dim, 
+                                         output_dim=output_dim)
+        
+        input_dim = x.size(1)
+        output_dim = self.num_classes
+        self.dense5 = DenseSoftmaxLayer(input_dim=input_dim, 
+                                        output_dim=output_dim)
+        
+        self.optimizer1 = optim.SGD(params=self.dense90.parameters(), lr=0.001, momentum=0.9)
+        self.optimizer2 = optim.SGD(params=self.dense5.parameters(), lr=0.001, momentum=0.9)
+
+        self.criterion1 = nn.CrossEntropyLoss()
+        self.criterion2 = nn.CrossEntropyLoss()
+        ###################################################################
 
     """ Method used to load a model. """
-    def load_model(self, device):
+    def load_model(self, model, device):
         check_path = os.path.join(self.args.checkpoint_path, self.model_name)
-        self.model.load_state_dict(torch.load(check_path, 
-                                              map_location=torch.device(device=device)))
+        model.load_state_dict(torch.load(check_path, 
+                                         map_location=torch.device(device=device)))
         print("\nModel loaded...")
 
-    """ Method used to train the model with early stopping implementation. """
-    def train_model(self):
-        print(f"\nStarting training...")
+    # PART-1
+    ##############################################################################
+    """ Method used to train the autoencoder model with early stopping implementation. """
+    def train_autoencoder(self):
+        print(f"\nStarting autoencoder training...")
 
         # to track the training loss as the model trains
         train_losses = []
@@ -74,28 +100,30 @@ class Solver(object):
 
         # initialize the early_stopping object
         check_path = os.path.join(self.args.checkpoint_path, self.model_name)
-        early_stopping = EarlyStopping(patience=self.patience, 
+        early_stopping = EarlyStopping(patience=self.patience,
                                        verbose=True, path=check_path)
 
         # put the model in training mode
-        self.model.train()
+        self.autoencoder.train()
 
         # loop over the dataset multiple times
         for epoch in range(self.num_epochs):
-            print(f"\nTraining iteration | Epoch[{epoch + 1}/{self.num_epochs}]\n")
+            print(
+                f"\nTraining iteration | Epoch[{epoch + 1}/{self.num_epochs}]\n")
 
             # used for creating a terminal progress bar
-            loop = tqdm(enumerate(self.train_loader), total=len(self.train_loader), leave=True)
+            loop = tqdm(enumerate(self.train_loader),
+                        total=len(self.train_loader), leave=True)
 
             for batch, X in loop:
                 # put data on correct device
                 X = X.to(self.device)
-                
+
                 # clear the gradients of all optimized variables
                 self.optimizer.zero_grad()
 
                 # forward pass: compute predicted outputs by passing inputs to the model
-                enc_output, dec_output  = self.model(X)
+                enc_output, dec_output = self.autoencoder(X)
 
                 # calculate the loss
                 loss = self.criterion(dec_output, X)
@@ -108,7 +136,7 @@ class Solver(object):
                 train_losses.append(loss.item())
 
             # validate the model at the end of each epoch
-            self.test_model(epoch, batch, valid_losses)
+            self.test_autoencoder(epoch, valid_losses)
 
             # # update the learning rate scheduler
             # self.scheduler.step()
@@ -119,15 +147,15 @@ class Solver(object):
             valid_loss = np.average(valid_losses)
             avg_train_losses.append(train_loss)
             avg_valid_losses.append(valid_loss)
-            
+
             # print some statistics
             print(f"\nEpoch[{epoch + 1}/{self.num_epochs}] | train-loss: {train_loss:.4f}, "
-                  f"validation-loss: {valid_loss:.4f}") # | lr: {lr_train:.6f}
-            
+                  f"validation-loss: {valid_loss:.4f}")  # | lr: {lr_train:.6f}
+
             # print statistics in tensorboard
-            self.writer.add_scalar("training-loss", train_loss, 
+            self.writer.add_scalar("training-loss", train_loss,
                                    epoch * len(self.train_loader) + batch)
-            self.writer.add_scalar("validation-loss", valid_loss, 
+            self.writer.add_scalar("validation-loss", valid_loss,
                                    epoch * len(self.train_loader) + batch)
 
             # clear lists to track next epoch
@@ -136,7 +164,7 @@ class Solver(object):
 
             # early_stopping needs the validation loss to check if it has decresed,
             # and if it has, it will make a checkpoint of the current model
-            early_stopping(valid_loss, self.model)
+            early_stopping(valid_loss, self.autoencoder)
 
             if early_stopping.early_stop:
                 print("\nEarly stopping...")
@@ -151,24 +179,109 @@ class Solver(object):
         print("\nFinished training...\n")
 
     """ Method used to evaluate the model on the validation set. """
-    def test_model(self, epoch, batch, test_losses):
-        print(f"\nEvaluation iteration | Epoch [{epoch + 1}/{self.num_epochs}]\n")
-        
+    def test_autoencoder(self, epoch, test_losses):
+        print(
+            f"\nEvaluation iteration | Epoch [{epoch + 1}/{self.num_epochs}]\n")
+
         # put model into evaluation mode
-        self.model.eval()
+        self.autoencoder.eval()
 
         # no need to calculate the gradients for our outputs
         with torch.no_grad():
-            test_loop = tqdm(enumerate(self.valid_loader), total=len(self.valid_loader), leave=True)
-            
+            test_loop = tqdm(enumerate(self.valid_loader),
+                             total=len(self.valid_loader), leave=True)
+
             for _, test_X in test_loop:
                 test_X = test_X.to(self.device)
-                
-                test_enc_output, test_dec_output = self.model(test_X)
+
+                test_enc_output, test_dec_output = self.autoencoder(test_X)
 
                 test_loss = self.criterion(test_dec_output, test_X)
 
                 test_losses.append(test_loss.item())
 
         # reput model into training mode
-        self.model.train()
+        self.autoencoder.train()
+    ##############################################################################
+
+    # PART-2
+    ##############################################################################
+    if True:
+        def compute_dot_product(self, mat1, mat2):
+            # # Create the input tensors
+            # matrix = torch.rand(32, 5, 5)  # Shape: [32, 5, 5]
+            # vector = torch.rand(32, 5)  # Shape: [32, 5]
+
+            # # Expand dimensions of the vector to match the shape of the matrix
+            # expanded_vector = vector.unsqueeze(2)  # Shape: [32, 5, 1]
+
+            # Perform the dot product using broadcasting: batched matrix x batched matrix
+            result = torch.matmul(mat1, mat2)  # Shape: [32, 5, 1]
+
+            # Remove the extra dimension from the result
+            result = result.squeeze(2)  # Shape: [32, 5]
+
+            # print(result.shape)  # Shape of the resulting tensor
+
+            return result
+
+        # def train_entire_model(self):
+        #     num_epochs = 10
+        #     for epoch in range(num_epochs):
+        #         running_loss = 0.0
+
+        #         # Forward pass
+        #         outputs = self.dense90(inputs)
+        #         loss = self.criterion2(outputs, labels)
+
+        #         # Backward pass and optimization
+        #         self.optimizer1.zero_grad()
+        #         self.loss1.backward()
+        #         self.optimizer1.step()
+
+        #         # Print statistics
+        #         running_loss += loss.item()
+        #         if (epoch + 1) % 10 == 0:
+        #             print(f"Epoch {epoch+1}/{num_epochs}, Loss: {running_loss}")
+
+        #     print("Training finished.")
+
+        def train_entire_model(self):
+            print(f"\nStarting autoencoder training...")
+
+            self.load_model(self.autoencoder, self.device)
+
+            # to track the training loss as the model trains
+            autoenc_train_losses, dense90_train_losses, dense5_train_losses  = [], [], []
+            # to track the validation loss as the model trains
+            autoenc_valid_losses, dense90_valid_losses, dense5_valid_losses  = [], [], []
+            # to track the average training loss per epoch as the model trains
+            autoenc_avg_train_losses, dense90_avg_train_losses, dense5_avg_train_losses = [], [], []
+            # to track the average validation loss per epoch as the model trains
+            autoenc_avg_valid_losses, dense90_avg_valid_losses, dense5_avg_valid_losses = [], [], []
+
+            # initialize the early_stopping object
+            check_path = os.path.join(self.args.checkpoint_path, self.model_name)
+            early_stopping = EarlyStopping(patience=self.patience,
+                                           verbose=True, path=check_path)
+
+            # put the models in training mode
+            self.autoencoder.train()
+            self.dense90.train()
+            self.dense5.train()
+
+            # loop over the dataset multiple times
+            for epoch in range(self.num_epochs):
+                print(f"\nTraining iteration | Epoch[{epoch + 1}/{self.num_epochs}]\n")
+
+                # used for creating a terminal progress bar
+                loop = tqdm(enumerate(self.train_loader),
+                            total=len(self.train_loader), leave=True)
+
+                for batch, X in loop:
+                    pass
+                    # x = x.reshape((x.size(0), x.size(2) * x.size(1)))
+
+        def test_entire_model(self):
+            pass
+    ##############################################################################

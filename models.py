@@ -11,7 +11,7 @@
 import torch
 import torch.nn as nn
 
-""" Class form LSTM in Autoencoder configuration. """
+""" Class form LSTM in Encoder-Decoder configuration. """
 class EncoderDecoderLSTM(nn.Module):
     """ Initialize configurations. """
     def __init__(self, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, num_layers, 
@@ -115,8 +115,46 @@ class EncoderDecoderLSTM(nn.Module):
 
         return enc_output, dec_output
 
-""" Runs the simulation. 
+
+""" Class for DenseLayer with Softmax at the end of the LSTM Decoder. """
+class DenseSoftmaxLayer(nn.Module):
+    """ Initialize configurations. """
+    def __init__(self, input_dim, output_dim):
+        super(DenseSoftmaxLayer, self).__init__()
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+
+        self.fc1 = nn.Linear(self.input_dim, self.output_dim)
+        self.softmax = nn.Softmax(dim=1)
+
+    """ Method used to define the forward pass of the input through the network during the training. """
+    def forward(self, x):
+        # print(f"\ninput-shape: {x.shape}")
+        x = self.fc1(x)
+        # print(f"\nfc1-shape: {x.shape}")
+        x = self.softmax(x)
+        # print(f"\nsoftmax-shape: {x.shape}")
+
+        return x
+
+""" Runs the simulation.
 if __name__ == "__main__":
+    x = torch.rand((32, 5, 18))
+
+    input_dim = x.size(2) * x.size(1)
+    output_dim = x.size(1)
+
+    x = x.reshape((32, x.size(2) * x.size(1)))
+
+    model = DenseSoftmaxLayer(input_dim=input_dim, 
+                              output_dim=output_dim)
+
+    output = model(x)
+
+    # output = output.reshape((32, x.size(1), 1))
+
+    # print(f"\nfirst-shape: {output.shape}")
+
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     print(f"\ndevice: \n{device}")
 

@@ -7,7 +7,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from solver import Solver
 from custom_dataset import get_data
-from model import EncoderDecoderLSTM
+from models import EncoderDecoderLSTM
 from custom_dataset import CustomDataset
 
 """ Function used to get command line parameters. """
@@ -20,13 +20,15 @@ def get_args():
                         help="path were to get the raw-dataset")
     parser.add_argument("--seq_len", type=int, default=5,
                         help="the lenght of the time-series sequence")
+    parser.add_argument("--num_classes", type=int, default=2,
+                        help="the number of classes to predict")
     #######################################################################################
 
     # model-infos
     #######################################################################################
-    parser.add_argument("--run_name", type=str, default="run_0",
+    parser.add_argument("--run_name", type=str, default="run_autoencoder",
                         help="the name assigned to the current run")
-    parser.add_argument("--model_name", type=str, default="simple_model",
+    parser.add_argument("--model_name", type=str, default="autoencoder",
                         help="the name of the model to be saved or loaded")
     #######################################################################################
 
@@ -83,6 +85,11 @@ def get_args():
                         help="determines whether to use weights initialization")
     #######################################################################################
 
+    #######################################################################################
+    parser.add_argument("--train_only_autoenc", action="store_true", default=True, 
+                        help="train only the autoencoder model on alive companies")
+    #######################################################################################
+
     return parser.parse_args()
 
 """ Function used to run the experiments. """
@@ -93,7 +100,9 @@ def main(args):
 
     # get the data as numpy arrays
     np_train, np_valid, np_test = get_data(data_path=args.data_path, 
-                                           seq_len=args.seq_len, verbose=False)
+                                           seq_len=args.seq_len, 
+                                           train_only_autoenc=args.train_only_autoenc, 
+                                           verbose=False)
 
     # dataset creation
     train_dataset = CustomDataset(x=np_train, seq_len=args.seq_len)
@@ -130,7 +139,8 @@ def main(args):
                     device=device, 
                     args=args)
 
-    solver.train_model()
+    if args.train_autoncoder:
+        solver.train_autoencoder()
 
 """ Runs the simulation. """
 if __name__ == "__main__":
