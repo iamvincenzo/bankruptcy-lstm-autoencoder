@@ -284,8 +284,8 @@ class Solver(object):
                 d5_train_losses.append(d5_loss.item())
 
             # validate the model at the end of each epoch
-            self.test_all(epoch, self.valid_loader, 
-                          ae_valid_losses, d90_valid_losses, d5_valid_losses)
+            self.test_all(epoch=epoch, data_loader=self.valid_loader, ae_losses=ae_valid_losses, 
+                          d90_losses=d90_valid_losses, d5_losses=d5_valid_losses, valid=True)
 
             # # update the learning rate scheduler
             # self.scheduler.step()
@@ -367,30 +367,36 @@ class Solver(object):
 
         # INFERECE (TEST-SET)
         ###########################################################################################
-        print("\nStarting the inference on the test set...\n")
+        print("\nStarting the inference on the test set...")
 
-        epoch=1
+        epoch=0
         ae_test_losses, d90_test_losses, d5_test_losses = [], [], []
 
         # test the model
-        self.test_all(epoch, self.test_loader, 
-                      ae_test_losses, d90_test_losses, d5_test_losses)
+        self.test_all(epoch=epoch, data_loader=self.test_loader, ae_losses=ae_test_losses, 
+                      d90_losses=d90_test_losses, d5_losses=d5_test_losses, valid=False)
 
         # calculate average loss over an epoch
         ae_test_loss = np.average(ae_test_losses)
-        d90_test_loss = np.average(d90_test_losses)
+        # d90_test_loss = np.average(d90_test_losses)
         d5_test_loss = np.average(d5_test_losses)
 
         # print some statistics
-        print(f"\Test[{epoch + 1}/{epoch + 1}] | ae_test-loss: {ae_test_loss:.4f} "
-              f"d90_test-loss: {d90_test_loss:.4f} d5_test-loss: {d5_test_loss:.4f} ")  # | lr: {lr_train:.6f}
+        print(f"\nTest[{epoch + 1}/{epoch + 1}] | ae_test-loss: {ae_test_loss:.4f} "
+            #   f"d90_test-loss: {d90_test_loss:.4f} "
+              f"d5_test-loss: {d5_test_loss:.4f} ")  # | lr: {lr_train:.6f}
 
         print("\nFinished the inference on the test set...\n")
         ###########################################################################################
 
     """ Method used to validate the entire model. """
-    def test_all(self, epoch, data_loader, ae_losses, d90_losses, d5_losses):
-        print(f"\nEvaluation iteration | Epoch [{epoch + 1}/{self.num_epochs}]\n")
+    def test_all(self, epoch, data_loader, ae_losses, d90_losses, d5_losses, valid=True):
+        if valid:
+            num_epochs = self.num_epochs
+        else:
+            num_epochs = epoch + 1
+        
+        print(f"\nEvaluation iteration | Epoch [{epoch + 1}/{num_epochs}]\n")
 
         # put model into evaluation mode
         self.autoencoder.eval()
@@ -461,7 +467,7 @@ class Solver(object):
             # self.writer.add_scalar("valid-f1_score", f1_score,
             #                         epoch * len(data_loader)) # + all_targets.size(0))            
 
-            print(f"\nEpoch [{epoch+1}/{self.num_epochs}] | Accuracy: {accuracy:.3f}, "
+            print(f"\nEpoch [{epoch+1}/{num_epochs}] | Accuracy: {accuracy:.3f}, "
                   f"Precision: {precision:.3f}, Recall: {recall:.3f}, F1-score: {f1_score:.3f}, "
                   f"Specificity: {specificity:.3f}")
 

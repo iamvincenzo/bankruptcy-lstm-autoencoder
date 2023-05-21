@@ -43,6 +43,8 @@ def get_data(data_path, seq_len, train_only_ae, verbose=False):
     print(f"\ntotal valid-samples: \n{np_valid.shape[0]//seq_len}")
     print(f"\ntotal test-samples: \n{np_test.shape[0]//seq_len}")
 
+    print(f"\nLoading data Done...")
+
     return np_train, np_valid, np_test
 
 
