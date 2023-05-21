@@ -121,7 +121,7 @@ def main(args):
 
     # select the device on which to place tensors
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
-    print(f"\ndevice: {device}")
+    print(f"\ndevice: \n{device}")
 
     # lstm in encoder-decoder configuration
     autoencoder = EncoderDecoderLSTM(enc_input_size=args.enc_input_size,
