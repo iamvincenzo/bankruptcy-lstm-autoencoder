@@ -25,17 +25,9 @@ def get_data(data_path, seq_len, train_only_ae, verbose=False):
     df_test.drop(columns=["fyear", "cik", "status_label"], inplace=True)
 
     if verbose:
-        print(f"\ndf_train: \n{df_train.head(5)}\n")
-        print(f"\ndf_valid: \n{df_valid.head(5)}")
-        print(f"\ndf_test: \n{df_test.head(5)}")
-
         print(f"\ndf_train-shape: \n{df_train.shape}")
         print(f"\ndf_valid-shape: \n{df_valid.shape}")
         print(f"\ndf_test-shape: \n{df_test.shape}")
-
-        print(f"\ntotal train-samples: \n{df_train.shape[0]//seq_len}")
-        print(f"\ntotal valid-samples: \n{df_valid.shape[0]//seq_len}")
-        print(f"\ntotal test-samples: \n{df_test.shape[0]//seq_len}")
 
     # convert data into numpy array
     np_train = df_train.to_numpy(copy=False, dtype=np.float32)
@@ -46,6 +38,10 @@ def get_data(data_path, seq_len, train_only_ae, verbose=False):
         print(f"\nnp_train-shape: \n{np_train.shape}")
         print(f"\nnp_valid-shape: \n{np_valid.shape}")
         print(f"\nnp_test-shape: \n{np_test.shape}")
+
+    print(f"\ntotal train-samples: \n{np_train.shape[0]//seq_len}")
+    print(f"\ntotal valid-samples: \n{np_valid.shape[0]//seq_len}")
+    print(f"\ntotal test-samples: \n{np_test.shape[0]//seq_len}")
 
     return np_train, np_valid, np_test
 
@@ -68,7 +64,7 @@ class CustomDataset(Dataset):
         data_y = self.x[start_index, -1:]
 
         tensor_x = torch.from_numpy(data_x)
-        tensor_y = torch.from_numpy(np.array([data_y, 1-data_y]))
+        tensor_y = torch.from_numpy(data_y)
 
         return tensor_x, tensor_y
 
