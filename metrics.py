@@ -12,13 +12,23 @@ class Rec_Loss(nn.Module):
     """ Method used to compute the loss value. """
     def forward(self, y_pred, y_true):
         out = torch.sub(y_pred, y_true).pow(2)
-        # # dim = 2 indicates to pick columns 
-        # # element per row to compute the mean per row
-        out = torch.mean(input=out, dim=2)  # , keepdim=True)
+        # dim = 2 indicates to pick columns element per each row to compute the mean per row
+        # esample [[2, 2, 2], [1, 1, 1]] --> [mean-row1=[2+2+2/3], mean-row2=[1+1+1/3]]
+        out = torch.mean(input=out, dim=2)
         out = torch.sqrt(out)
         out = torch.mean(out)
 
         return out
+
+""" Method used to compute the y_true for dense90. """
+def reconstruction_for_prior(y_pred, y_true):
+    out = torch.sub(y_pred, y_true).pow(2)
+    # dim = 2 indicates to pick columns element per each row to compute the mean per row
+    # esample [[2, 2, 2], [1, 1, 1]] --> [mean-row1=[2+2+2/3], mean-row2=[1+1+1/3]]
+    out = torch.mean(input=out, dim=2)
+    out = torch.sqrt(out)
+
+    return out
 
 
 # https://gist.github.com/the-bass/cae9f3976866776dea17a5049013258d

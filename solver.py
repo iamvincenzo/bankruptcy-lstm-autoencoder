@@ -9,6 +9,7 @@ from metrics import Rec_Loss
 from metrics import compute_metrics
 from pytorchtools import EarlyStopping
 from pltotting_utils import plot_losses
+from metrics import reconstruction_for_prior
 
 
 """ Class for training, validation and testing. """
@@ -268,13 +269,17 @@ class Solver(object):
                 # reshape label to match the output shape of dense5-net
                 label = label.squeeze(1).long() # shape [32, 1] --> [32]
 
+                # compute y_true for dense90-net
+                d90_true = reconstruction_for_prior(y_pred=dec_output, 
+                                                    y_true=ae_input)
+
                 # calculate the loss
                 ae_loss = self.criterion(y_pred=dec_output, y_true=ae_input)
-                # d90_loss = self.criterion1(input=d90_output, target=) # ??? quale è
+                d90_loss = self.criterion1(input=d90_output, target=d90_true)
                 d5_loss = self.criterion2(input=d5_output, target=label)
 
                 # backward pass: compute gradient of the loss with respect to model parameters
-                total_loss = ae_loss + d5_loss # + d90_loss
+                total_loss = ae_loss + d5_loss + d90_loss
                 total_loss.backward()
                 # ae_loss.backward(retain_graph=True)
                 # d90_loss.backward()
@@ -287,7 +292,7 @@ class Solver(object):
 
                 # record training loss
                 ae_train_losses.append(ae_loss.item())
-                # d90_train_losses.append(d90_loss.item())
+                d90_train_losses.append(d90_loss.item())
                 d5_train_losses.append(d5_loss.item())
 
             # validate the model at the end of each epoch
@@ -304,10 +309,10 @@ class Solver(object):
             ae_avg_train_losses.append(ae_train_loss)
             ae_avg_valid_losses.append(ae_valid_loss)
 
-            # d90_train_loss = np.average(d90_train_losses)
-            # d90_valid_loss = np.average(d90_valid_losses)
-            # d90_avg_train_losses.append(d90_train_loss)
-            # d90_avg_valid_losses.append(d90_valid_loss)
+            d90_train_loss = np.average(d90_train_losses)
+            d90_valid_loss = np.average(d90_valid_losses)
+            d90_avg_train_losses.append(d90_train_loss)
+            d90_avg_valid_losses.append(d90_valid_loss)
 
             d5_train_loss = np.average(d5_train_losses)
             d5_valid_loss = np.average(d5_valid_losses)
@@ -317,7 +322,7 @@ class Solver(object):
             # print some statistics
             print(f"\nEpoch[{epoch + 1}/{self.num_epochs}] | "
                   f"ae_train-loss: {ae_train_loss:.4f}, ae_validation-loss: {ae_valid_loss:.4f} "
-                #   f"d90_train-loss: {d90_train_loss:.4f}, d90_validation-loss: {d90_valid_loss:.4f} "
+                  f"d90_train-loss: {d90_train_loss:.4f}, d90_validation-loss: {d90_valid_loss:.4f} "
                   f"d5_train-loss: {d5_train_loss:.4f}, d5_validation-loss: {d5_valid_loss:.4f} ")  # | lr: {lr_train:.6f}
 
             # print statistics in tensorboard
@@ -325,10 +330,10 @@ class Solver(object):
                                 epoch * len(self.train_loader)) # + batch)
             self.writer.add_scalar("ae-validation-loss", ae_valid_loss,
                                    epoch * len(self.valid_loader)) # + batch)
-            # self.writer.add_scalar("d90-training-loss", d90_train_loss,
-            #                     epoch * len(self.train_loader)) # + batch)
-            # self.writer.add_scalar("d90-validation-loss", d90_valid_loss,
-            #                        epoch * len(self.valid_loader)) # + batch)
+            self.writer.add_scalar("d90-training-loss", d90_train_loss,
+                                epoch * len(self.train_loader)) # + batch)
+            self.writer.add_scalar("d90-validation-loss", d90_valid_loss,
+                                   epoch * len(self.valid_loader)) # + batch)
             self.writer.add_scalar("d5-training-loss", d5_train_loss,
                                 epoch * len(self.train_loader)) # + batch)
             self.writer.add_scalar("d5-validation-loss", d5_valid_loss,
@@ -337,21 +342,21 @@ class Solver(object):
             total_train_loss = ae_train_loss + d5_train_loss # + d90_train_loss
             total_valid_loss = ae_valid_loss + d5_valid_loss # + d90_valid_loss
             self.writer.add_scalar("total-train-loss", total_train_loss,
-                                epoch * len(self.train_loader)) # + batch)
+                                   epoch * len(self.train_loader)) # + batch)
             self.writer.add_scalar("total-valid-loss", total_valid_loss,
                                    epoch * len(self.valid_loader)) # + batch)
             
             # clear lists to track next epoch
             ae_train_losses = []
             ae_valid_losses = []
-            # d90_train_losses = []
-            # d90_valid_losses = []
+            d90_train_losses = []
+            d90_valid_losses = []
             d5_train_losses = []
             d5_valid_losses = []
 
             # early_stopping needs the validation loss to check if it has decresed,
             # and if it has, it will make a checkpoint of the current model
-            tot_loss = ae_valid_loss + d5_valid_loss # + d90_valid_loss
+            tot_loss = ae_valid_loss + d5_valid_loss + d90_valid_loss
             early_stopping(tot_loss, self.autoencoder)
 
             if early_stopping.early_stop:
@@ -361,8 +366,8 @@ class Solver(object):
         fig = plot_losses(ae_avg_train_losses, ae_avg_valid_losses)
         self.writer.add_figure('ae-loss-graph', fig)
 
-        # fig = plot_losses(d90_avg_train_losses, d90_avg_valid_losses)
-        # self.writer.add_figure('d90-loss-graph', fig)
+        fig = plot_losses(d90_avg_train_losses, d90_avg_valid_losses)
+        self.writer.add_figure('d90-loss-graph', fig)
 
         fig = plot_losses(d5_avg_train_losses, d5_avg_valid_losses)
         self.writer.add_figure('d5-loss-graph', fig)
@@ -385,7 +390,7 @@ class Solver(object):
 
         # calculate average loss over an epoch
         ae_test_loss = np.average(ae_test_losses)
-        # d90_test_loss = np.average(d90_test_losses)
+        d90_test_loss = np.average(d90_test_losses)
         d5_test_loss = np.average(d5_test_losses)
 
         # # print some statistics
@@ -441,14 +446,18 @@ class Solver(object):
                 # reshape label to match the output shape of dense5-net
                 label = label.squeeze(1).long() # shape [32, 1] --> [32]
 
+                # compute y_true for dense90-net
+                d90_true = reconstruction_for_prior(y_pred=dec_output, 
+                                                    y_true=ae_input)
+
                 # calculate the loss
                 ae_loss = self.criterion(y_pred=dec_output, y_true=ae_input)
-                # d90_loss = self.criterion1(input=d90_output, target=) # ??? quale è
+                d90_loss = self.criterion1(input=d90_output, target=d90_true)
                 d5_loss = self.criterion2(input=d5_output, target=label)
 
                 # record training loss
                 ae_losses.append(ae_loss.item())
-                # d90_losses.append(d9_loss.item())
+                d90_losses.append(d90_loss.item())
                 d5_losses.append(d5_loss.item())
 
                 # append predictions and targets for computing epoch accuracy
