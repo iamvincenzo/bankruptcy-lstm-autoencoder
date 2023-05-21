@@ -120,7 +120,7 @@ class EncoderDecoderLSTM(nn.Module):
 """ Class for DenseLayer with Softmax at the end of the LSTM Decoder. """
 class DenseSoftmaxLayer(nn.Module):
     """ Initialize configurations. """
-    def __init__(self, input_dim, output_dim):
+    def __init__(self, input_dim, output_dim, weights_init=True):
         super(DenseSoftmaxLayer, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -128,7 +128,8 @@ class DenseSoftmaxLayer(nn.Module):
         self.fc1 = nn.Linear(self.input_dim, self.output_dim)
         self.softmax = nn.Softmax(dim=1)
 
-        self.weights_initialization()
+        if weights_init:
+            self.weights_initialization()
 
     """ Method used to initialize the weights of the network. """
     def weights_initialization(self):
