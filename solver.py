@@ -208,6 +208,9 @@ class Solver(object):
     def train_all(self):
         print(f"\nStarting entire model training...")
 
+        # do not overwrite ae_model
+        self.args.model_name = self.args.model_name + "_failed_all"
+
         # to track the training loss as the model trains
         ae_train_losses, d90_train_losses, d5_train_losses  = [], [], []
         # to track the validation loss as the model trains
