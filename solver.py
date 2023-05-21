@@ -474,7 +474,7 @@ class Solver(object):
                   f"Precision: {precision:.3f}, Recall: {recall:.3f}, F1-score: {f1_score:.3f}, "
                   f"Specificity: {specificity:.3f}")
 
-            print(f"\nConfusion_matrix: \n\n{conf_matr}")
+            print(f"\nConfusion_matrix: \n{conf_matr}")
 
         # reput model into training mode
         self.autoencoder.train()
