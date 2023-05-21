@@ -6,6 +6,7 @@ from tqdm import tqdm
 import torch.optim as optim
 
 from metrics import Rec_Loss
+from metrics import compute_metrics
 from pytorchtools import EarlyStopping
 from pltotting_utils import plot_losses
 
@@ -111,7 +112,7 @@ class Solver(object):
                 enc_output, dec_output = self.autoencoder(X)
 
                 # calculate the loss
-                loss = self.criterion(X, dec_output)
+                loss = self.criterion(y_pred=dec_output, y_true=X)
                 # backward pass: compute gradient of the loss with respect to model parameters
                 loss.backward()
                 # perform a single optimization step (parameter update)
@@ -139,9 +140,9 @@ class Solver(object):
 
             # print statistics in tensorboard
             self.writer.add_scalar("only-ae-training-loss", train_loss,
-                                   epoch * len(self.train_loader) + batch)
+                                   epoch * len(self.train_loader)) # + batch)
             self.writer.add_scalar("only-ae-validation-loss", valid_loss,
-                                   epoch * len(self.valid_loader) + batch)
+                                   epoch * len(self.valid_loader)) # + batch)
 
             # clear lists to track next epoch
             train_losses = []
@@ -185,8 +186,6 @@ class Solver(object):
 
         # reput model into training mode
         self.autoencoder.train()
-
-    # torch.set_printoptions(profile="full")
 
     """ Method used to compute the dot product between a matrix and a vector. """
     def compute_dot_product(self, mat, vec):    
@@ -257,18 +256,18 @@ class Solver(object):
                                                     vec=d90_output)
                 
                 # forward pass: compute predicted outputs by passing inputs to the model
-                d5_output = self.dense5(d5_input)
+                d5_output = self.dense5(d5_input) # shape [32, 2]
 
                 # reshape label to match the output shape of dense5-net
-                label = label.squeeze(2)
+                label = label.squeeze(1).long() # shape [32, 1] --> [32]
 
                 # calculate the loss
-                ae_loss = self.criterion(ae_input, dec_output)
-                # d90_loss = self.criterion1(d90_output, d90_output) # ??? quale è
-                d5_loss = self.criterion2(label, d5_output)
+                ae_loss = self.criterion(y_pred=dec_output, y_true=ae_input)
+                # d90_loss = self.criterion1(input=d90_output, target=) # ??? quale è
+                d5_loss = self.criterion2(input=d5_output, target=label)
 
                 # backward pass: compute gradient of the loss with respect to model parameters
-                total_loss = ae_loss + d5_loss #+ d90_loss
+                total_loss = ae_loss + d5_loss # + d90_loss
                 total_loss.backward()
                 # ae_loss.backward(retain_graph=True)
                 # d90_loss.backward()
@@ -315,24 +314,24 @@ class Solver(object):
 
             # print statistics in tensorboard
             self.writer.add_scalar("ae-training-loss", ae_train_loss,
-                                epoch * len(self.train_loader) + batch)
+                                epoch * len(self.train_loader)) # + batch)
             self.writer.add_scalar("ae-validation-loss", ae_valid_loss,
-                                   epoch * len(self.valid_loader) + batch)
+                                   epoch * len(self.valid_loader)) # + batch)
             # self.writer.add_scalar("d90-training-loss", d90_train_loss,
-            #                     epoch * len(self.train_loader) + batch)
+            #                     epoch * len(self.train_loader)) # + batch)
             # self.writer.add_scalar("d90-validation-loss", d90_valid_loss,
-            #                        epoch * len(self.valid_loader) + batch)
+            #                        epoch * len(self.valid_loader)) # + batch)
             self.writer.add_scalar("d5-training-loss", d5_train_loss,
-                                epoch * len(self.train_loader) + batch)
+                                epoch * len(self.train_loader)) # + batch)
             self.writer.add_scalar("d5-validation-loss", d5_valid_loss,
-                                   epoch * len(self.valid_loader) + batch)
+                                   epoch * len(self.valid_loader)) # + batch)
             
             total_train_loss = ae_train_loss + d5_train_loss # + d90_train_loss
             total_valid_loss = ae_valid_loss + d5_valid_loss # + d90_valid_loss
             self.writer.add_scalar("total-train-loss", total_train_loss,
-                                epoch * len(self.train_loader) + batch)
+                                epoch * len(self.train_loader)) # + batch)
             self.writer.add_scalar("total-valid-loss", total_valid_loss,
-                                   epoch * len(self.valid_loader) + batch)
+                                   epoch * len(self.valid_loader)) # + batch)
             
             # clear lists to track next epoch
             ae_train_losses = []
@@ -364,32 +363,6 @@ class Solver(object):
         self.writer.close()
 
         print("\nFinished entire model training...\n")
-
-    """ Method used to compute the precision and recall in the validation set. """
-    def compute_accuracy_precision_recall(self, epoch, predictions, targets):
-        # Compute true positives, false positives, and false negatives
-        predicted_classes = torch.argmax(predictions, dim=1)
-        target_classes = torch.argmax(targets, dim=1)
-
-        correct_predictions = (predicted_classes == target_classes).sum().item()
-        true_positives = torch.sum((predicted_classes == 1) & (target_classes == 1)).item()
-        false_positives = torch.sum((predicted_classes == 1) & (target_classes == 0)).item()
-        false_negatives = torch.sum((predicted_classes == 0) & (target_classes == 1)).item()
-
-        accuracy = (correct_predictions / targets.size(0))
-        precision = true_positives / (true_positives + false_positives + 1e-10)
-        recall = true_positives / (true_positives + false_negatives + 1e-10)
-
-        # print statistics in tensorboard
-        self.writer.add_scalar("valid-accuracy", accuracy,
-                               epoch * len(self.valid_loader) + targets.size(0))
-        self.writer.add_scalar("valid-precision", precision,
-                               epoch * len(self.valid_loader) + targets.size(0))
-        self.writer.add_scalar("valid-recall", recall,
-                               epoch * len(self.valid_loader) + targets.size(0))
-
-        print(f"\nEpoch [{epoch+1}/{self.num_epochs}] | Accuracy: {accuracy:.3f}, "
-              f"Precision: {precision:.3f}, Recall: {recall:.3f}")
 
     """ Method used to validate the entire model. """
     def test_all(self, epoch, ae_valid_losses, d90_valid_losses, d5_valid_losses):
@@ -429,12 +402,12 @@ class Solver(object):
                 d5_output = self.dense5(d5_input)
 
                 # reshape label to match the output shape of dense5-net
-                label = label.squeeze(2)
+                label = label.squeeze(1).long() # shape [32, 1] --> [32]
 
                 # calculate the loss
-                ae_loss = self.criterion(ae_input, dec_output)
-                # d90_loss = self.criterion1() ??? quale è
-                d5_loss = self.criterion2(label, d5_output)
+                ae_loss = self.criterion(y_pred=dec_output, y_true=ae_input)
+                # d90_loss = self.criterion1(input=d90_output, target=) # ??? quale è
+                d5_loss = self.criterion2(input=d5_output, target=label)
 
                 # record training loss
                 ae_valid_losses.append(ae_loss.item())
@@ -445,14 +418,30 @@ class Solver(object):
                 total_predictions.append(d5_output)
                 total_targets.append(label)
             
-            # concatenate all predictions and targets
-            all_predictions = torch.cat(total_predictions)
-            all_targets = torch.cat(total_targets)
-            
+            # concatenate all predictions and targets along 0-axis (vertically)
+            all_predictions = torch.cat(total_predictions, dim=0)
+            all_targets = torch.cat(total_targets, dim=0)
+
             # compute the accuracy, precision and recall
-            self.compute_accuracy_precision_recall(epoch=epoch, 
-                                                   predictions=all_predictions,
-                                                   targets=all_targets)
+            (accuracy, precision, recall, f1_score, 
+             specificity, conf_matr) = compute_metrics(predictions=all_predictions,
+                                                       targets=all_targets)
+            
+            # print statistics in tensorboard
+            self.writer.add_scalar("valid-accuracy", accuracy,
+                                    epoch * len(self.valid_loader)) # + all_targets.size(0))
+            self.writer.add_scalar("valid-precision", precision,
+                                    epoch * len(self.valid_loader)) # + all_targets.size(0))
+            self.writer.add_scalar("valid-recall", recall,
+                                    epoch * len(self.valid_loader)) #+ all_targets.size(0))
+            self.writer.add_scalar("valid-f1_score", f1_score,
+                                    epoch * len(self.valid_loader)) # + all_targets.size(0))            
+
+            print(f"\nEpoch [{epoch+1}/{self.num_epochs}] | Accuracy: {accuracy:.3f}, "
+                  f"Precision: {precision:.3f}, Recall: {recall:.3f}, F1-score: {f1_score:.3f}, "
+                  f"Specificity: {specificity:.3f}")
+
+            print(f"\nConfusion_matrix: \n\n{conf_matr}")
 
         # reput model into training mode
         self.autoencoder.train()
