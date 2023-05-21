@@ -284,7 +284,8 @@ class Solver(object):
                 d5_train_losses.append(d5_loss.item())
 
             # validate the model at the end of each epoch
-            self.test_all(epoch, ae_valid_losses, d90_valid_losses, d5_valid_losses)
+            self.test_all(epoch, self.valid_loader, 
+                          ae_valid_losses, d90_valid_losses, d5_valid_losses)
 
             # # update the learning rate scheduler
             # self.scheduler.step()
@@ -364,8 +365,31 @@ class Solver(object):
 
         print("\nFinished entire model training...\n")
 
+        # INFERECE
+        ###########################################################################################
+        print("\nStarting the inference on the test set...\n")
+
+        epoch=1
+        ae_test_losses, d90_test_losses, d5_test_losses = [], [], []
+
+        # test the model
+        self.test_all(epoch, self.test_loader, 
+                      ae_test_losses, d90_test_losses, d5_test_losses)
+
+        # calculate average loss over an epoch
+        ae_test_loss = np.average(ae_test_losses)
+        d90_test_loss = np.average(d90_test_losses)
+        d5_test_loss = np.average(d5_test_losses)
+
+        # print some statistics
+        print(f"\Test[{epoch + 1}/{epoch + 1}] | ae_test-loss: {ae_test_loss:.4f} "
+              f"d90_test-loss: {d90_test_loss:.4f} d5_test-loss: {d5_test_loss:.4f} ")  # | lr: {lr_train:.6f}
+
+        print("\nFinished the inference on the test set...\n")
+        ###########################################################################################
+
     """ Method used to validate the entire model. """
-    def test_all(self, epoch, ae_valid_losses, d90_valid_losses, d5_valid_losses):
+    def test_all(self, epoch, data_loader, ae_losses, d90_losses, d5_losses):
         print(f"\nEvaluation iteration | Epoch [{epoch + 1}/{self.num_epochs}]\n")
 
         # put model into evaluation mode
@@ -375,7 +399,7 @@ class Solver(object):
 
         # no need to calculate the gradients for our outputs
         with torch.no_grad():
-            loop = tqdm(enumerate(self.valid_loader), total=len(self.valid_loader), leave=True)
+            loop = tqdm(enumerate(data_loader), total=len(data_loader), leave=True)
 
             total_predictions = []
             total_targets = []
@@ -410,9 +434,9 @@ class Solver(object):
                 d5_loss = self.criterion2(input=d5_output, target=label)
 
                 # record training loss
-                ae_valid_losses.append(ae_loss.item())
-                # d90_valid_losses.append(d9_loss.item())
-                d5_valid_losses.append(d5_loss.item())
+                ae_losses.append(ae_loss.item())
+                # d90_losses.append(d9_loss.item())
+                d5_losses.append(d5_loss.item())
 
                 # append predictions and targets for computing epoch accuracy
                 total_predictions.append(d5_output)
@@ -429,13 +453,13 @@ class Solver(object):
             
             # print statistics in tensorboard
             self.writer.add_scalar("valid-accuracy", accuracy,
-                                    epoch * len(self.valid_loader)) # + all_targets.size(0))
+                                    epoch * len(data_loader)) # + all_targets.size(0))
             self.writer.add_scalar("valid-precision", precision,
-                                    epoch * len(self.valid_loader)) # + all_targets.size(0))
+                                    epoch * len(data_loader)) # + all_targets.size(0))
             self.writer.add_scalar("valid-recall", recall,
-                                    epoch * len(self.valid_loader)) #+ all_targets.size(0))
+                                    epoch * len(data_loader)) #+ all_targets.size(0))
             self.writer.add_scalar("valid-f1_score", f1_score,
-                                    epoch * len(self.valid_loader)) # + all_targets.size(0))            
+                                    epoch * len(data_loader)) # + all_targets.size(0))            
 
             print(f"\nEpoch [{epoch+1}/{self.num_epochs}] | Accuracy: {accuracy:.3f}, "
                   f"Precision: {precision:.3f}, Recall: {recall:.3f}, F1-score: {f1_score:.3f}, "
