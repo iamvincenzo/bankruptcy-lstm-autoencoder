@@ -210,6 +210,7 @@ class Solver(object):
 
         # do not overwrite ae_model
         self.args.model_name = self.args.model_name + "_failed_all"
+        self.model_name = f"lstm_encdec_{self.args.model_name}.pt"
 
         # to track the training loss as the model trains
         ae_train_losses, d90_train_losses, d5_train_losses  = [], [], []
