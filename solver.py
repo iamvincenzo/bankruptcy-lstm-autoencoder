@@ -365,7 +365,7 @@ class Solver(object):
 
         print("\nFinished entire model training...\n")
 
-        # INFERECE
+        # INFERECE (TEST-SET)
         ###########################################################################################
         print("\nStarting the inference on the test set...\n")
 
@@ -451,15 +451,15 @@ class Solver(object):
              specificity, conf_matr) = compute_metrics(predictions=all_predictions,
                                                        targets=all_targets)
             
-            # print statistics in tensorboard
-            self.writer.add_scalar("valid-accuracy", accuracy,
-                                    epoch * len(data_loader)) # + all_targets.size(0))
-            self.writer.add_scalar("valid-precision", precision,
-                                    epoch * len(data_loader)) # + all_targets.size(0))
-            self.writer.add_scalar("valid-recall", recall,
-                                    epoch * len(data_loader)) #+ all_targets.size(0))
-            self.writer.add_scalar("valid-f1_score", f1_score,
-                                    epoch * len(data_loader)) # + all_targets.size(0))            
+            # # print statistics in tensorboard
+            # self.writer.add_scalar("valid-accuracy", accuracy,
+            #                         epoch * len(data_loader)) # + all_targets.size(0))
+            # self.writer.add_scalar("valid-precision", precision,
+            #                         epoch * len(data_loader)) # + all_targets.size(0))
+            # self.writer.add_scalar("valid-recall", recall,
+            #                         epoch * len(data_loader)) #+ all_targets.size(0))
+            # self.writer.add_scalar("valid-f1_score", f1_score,
+            #                         epoch * len(data_loader)) # + all_targets.size(0))            
 
             print(f"\nEpoch [{epoch+1}/{self.num_epochs}] | Accuracy: {accuracy:.3f}, "
                   f"Precision: {precision:.3f}, Recall: {recall:.3f}, F1-score: {f1_score:.3f}, "
