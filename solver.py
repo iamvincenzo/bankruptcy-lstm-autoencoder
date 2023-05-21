@@ -387,10 +387,10 @@ class Solver(object):
         # d90_test_loss = np.average(d90_test_losses)
         d5_test_loss = np.average(d5_test_losses)
 
-        # print some statistics
-        print(f"\nTest[{epoch + 1}/{epoch + 1}] | ae_test-loss: {ae_test_loss:.4f} "
-            #   f"d90_test-loss: {d90_test_loss:.4f} "
-              f"d5_test-loss: {d5_test_loss:.4f} ")  # | lr: {lr_train:.6f}
+        # # print some statistics
+        # print(f"\nTest[{epoch + 1}/{epoch + 1}] | ae_test-loss: {ae_test_loss:.4f} "
+        #     #   f"d90_test-loss: {d90_test_loss:.4f} "
+        #       f"d5_test-loss: {d5_test_loss:.4f} ")  # | lr: {lr_train:.6f}
 
         print("\nInference on the test set Done...\n")
         ###########################################################################################
