@@ -74,7 +74,7 @@ class Solver(object):
 
     """ Method used to train the autoencoder model with early stopping implementation. """
     def train_ae(self):
-        print(f"\nStarting autoencoder training...")
+        print(f"\nStarting LSTM-Autoencoder training...")
 
         # to track the training loss as the model trains
         train_losses = []
@@ -98,21 +98,20 @@ class Solver(object):
             print(f"\nTraining iteration | Epoch[{epoch + 1}/{self.num_epochs}]\n")
 
             # used for creating a terminal progress bar
-            loop = tqdm(enumerate(self.train_loader),
-                        total=len(self.train_loader), leave=True)
+            loop = tqdm(enumerate(self.train_loader), total=len(self.train_loader), leave=True)
 
-            for batch, (X, _) in loop:
+            for batch, (ae_input, _) in loop:
                 # put data on correct device
-                X = X.to(self.device)
+                ae_input = ae_input.to(self.device)
 
                 # clear the gradients of all optimized variables
                 self.optimizer.zero_grad()
 
                 # forward pass: compute predicted outputs by passing inputs to the model
-                enc_output, dec_output = self.autoencoder(X)
+                enc_output, dec_output = self.autoencoder(ae_input)
 
                 # calculate the loss
-                loss = self.criterion(y_pred=dec_output, y_true=X)
+                loss = self.criterion(y_pred=dec_output, y_true=ae_input)
                 # backward pass: compute gradient of the loss with respect to model parameters
                 loss.backward()
                 # perform a single optimization step (parameter update)
@@ -162,7 +161,7 @@ class Solver(object):
         self.writer.flush()
         self.writer.close()
 
-        print("\nFinished autoencoder training...\n")
+        print("\nLSTM-Autoencoder training Done...\n")
 
     """ Method used to evaluate the model on the validation set. """
     def test_ae(self, epoch, valid_losses):
@@ -175,13 +174,17 @@ class Solver(object):
         with torch.no_grad():
             loop = tqdm(enumerate(self.valid_loader), total=len(self.valid_loader), leave=True)
 
-            for _, (X, _) in loop:
-                X = X.to(self.device)
+            for _, (ae_input, _) in loop:
+                # put data on correct device
+                ae_input = ae_input.to(self.device)
 
-                _, dec_output = self.autoencoder(X)
+                # forward pass: compute predicted outputs by passing inputs to the model
+                _, dec_output = self.autoencoder(ae_input)
 
-                test_loss = self.criterion(X, dec_output)
+                # calculate the loss
+                test_loss = self.criterion(y_pred=dec_output, y_true=ae_input)
 
+                # record training loss
                 valid_losses.append(test_loss.item())
 
         # reput model into training mode
@@ -363,7 +366,7 @@ class Solver(object):
         self.writer.flush()
         self.writer.close()
 
-        print("\nFinished entire model training...\n")
+        print("\nEntire model training Done...\n")
 
         # INFERECE (TEST-SET)
         ###########################################################################################
@@ -386,7 +389,7 @@ class Solver(object):
             #   f"d90_test-loss: {d90_test_loss:.4f} "
               f"d5_test-loss: {d5_test_loss:.4f} ")  # | lr: {lr_train:.6f}
 
-        print("\nFinished the inference on the test set...\n")
+        print("\nInference on the test set Done...\n")
         ###########################################################################################
 
     """ Method used to validate the entire model. """
