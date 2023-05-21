@@ -49,8 +49,8 @@ class EncoderDecoderLSTM(nn.Module):
             self._reinitialize()
 
     """ Tensorflow/Keras-like initialization. """
-    def _reinitialize(self):    
-        print('\nPerforming weights initialization...')
+    def _reinitialize(self):
+        print('\nPerforming LSTM-AE weights initialization...')
 
         for name, p in self.named_parameters():
             if 'lstm' in name:
@@ -128,6 +128,16 @@ class DenseSoftmaxLayer(nn.Module):
         self.fc1 = nn.Linear(self.input_dim, self.output_dim)
         self.softmax = nn.Softmax(dim=1)
 
+        self.weights_initialization()
+
+    """ Method used to initialize the weights of the network. """
+    def weights_initialization(self):
+        print(f"\nPerforming Linear weights initialization...")
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.kaiming_uniform_(m.weight)
+                nn.init.constant_(m.bias, 0)
+
     """ Method used to define the forward pass of the input through the network during the training. """
     def forward(self, x):
         # print(f"\ninput-shape: {x.shape}")
@@ -137,6 +147,7 @@ class DenseSoftmaxLayer(nn.Module):
         # print(f"\nsoftmax-shape: {x.shape}")
 
         return x
+
 
 """ Runs the simulation.
 if __name__ == "__main__":
