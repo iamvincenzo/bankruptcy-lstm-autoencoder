@@ -149,6 +149,8 @@ class DenseSoftmaxLayer(nn.Module):
         # print(f"\ninput-shape: {x.shape}")
         x = self.fc1(x)
         # print(f"\nfc1-shape: {x.shape}")
+        x = self.fc2(x)
+        # print(f"\nfc2-shape: {x.shape}")
         x = self.softmax(x)
         # print(f"\nsoftmax-shape: {x.shape}")
 
