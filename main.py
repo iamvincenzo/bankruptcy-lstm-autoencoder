@@ -47,9 +47,9 @@ def get_args():
     #######################################################################################
     parser.add_argument("--enc_input_size", type=int, default=18,
                         help="the number of expected features in the input x")
-    parser.add_argument("--enc_hidden_size", type=int, default=5,  # 18,
+    parser.add_argument("--enc_hidden_size", type=int, default=5,
                         help="the number of features in the hidden state h of the encoder")
-    parser.add_argument("--dec_input_size", type=int, default=5,  # 18,
+    parser.add_argument("--dec_input_size", type=int, default=5,
                         help="the number of expected features in the output of the encoder")
     parser.add_argument("--dec_hidden_size", type=int, default=18,
                         help="the number of features in the hidden state h of the decoder")
@@ -59,7 +59,7 @@ def get_args():
 
     # training-parameters (1)
     #######################################################################################
-    parser.add_argument("--num_epochs", type=int, default=10, # 20,
+    parser.add_argument("--num_epochs", type=int, default=3000,
                         help="the total number of training epochs")
     parser.add_argument("--batch_size", type=int, default=32,
                         help="the batch size for training and test data")
@@ -145,10 +145,12 @@ def main(args):
                                      num_layers=args.num_layers,
                                      device=device,
                                      weights_init=args.weights_init)
-
+    # get input shape
     x, _ = next(iter(train_loader))    
     input_dim = x.size(1)
     output_dim = args.num_classes
+    
+    # standard fc-net for classification task
     dense5 = DenseSoftmaxLayer(input_dim=input_dim,
                                output_dim=output_dim,
                                weights_init=args.weights_init)
