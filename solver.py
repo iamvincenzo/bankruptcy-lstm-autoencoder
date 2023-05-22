@@ -10,6 +10,7 @@ from metrics import compute_metrics
 from pytorchtools import EarlyStopping
 from pltotting_utils import plot_losses
 from metrics import reconstruction_for_prior
+from custom_dataset import get_valid_failed_dataloader
 
 
 """ Class for training, validation and testing. """
@@ -119,7 +120,8 @@ class Solver(object):
                 train_losses.append(loss.item())
 
             # validate the model at the end of each epoch
-            self.test_ae(epoch, valid_losses)
+            self.test_ae(epoch=epoch, data_loader=self.valid_loader, 
+                         valid_losses=valid_losses, valid=True)
 
             # # update the learning rate scheduler
             # self.scheduler.step()
@@ -161,16 +163,45 @@ class Solver(object):
 
         print("\nLSTM-Autoencoder training Done...\n")
 
+        # INFERECE (VALIDATION-SET) with only failed companies
+        ###########################################################################################
+        print("\nStarting the inference on the validation-set with only failed companies...")
+
+        valid_failed_loader = get_valid_failed_dataloader(self.args.data_path,
+                                                          self.args.seq_len,
+                                                          self.args.batch_size,
+                                                          self.args.workers)
+        epoch=0
+        valid_failed_losses = []
+        # validate the model on failed companies
+        self.test_ae(epoch=epoch, data_loader=valid_failed_loader,
+                     valid_losses=valid_failed_losses, valid=False)
+
+        # calculate average loss over an epoch
+        valid_failed_loss = np.average(valid_failed_losses)
+
+        # print some statistics
+        print(f"\nTest[{epoch + 1}/{epoch + 1}] | "
+              f"mean-reconstruction-error on failed companies: {valid_failed_loss}")  # | lr: {lr_train:.6f}
+
+        print("\nInference on the validation-set with only failed companies Done...\n")
+        ###########################################################################################
+
     """ Method used to evaluate the model on the validation set. """
-    def test_ae(self, epoch, valid_losses):
-        print(f"\nEvaluation iteration | Epoch [{epoch + 1}/{self.num_epochs}]\n")
+    def test_ae(self, epoch, data_loader, valid_losses, valid=True):
+        if valid:
+            num_epochs = self.num_epochs
+        else:
+            num_epochs = epoch + 1
+
+        print(f"\nEvaluation iteration | Epoch [{epoch + 1}/{num_epochs}]\n")
 
         # put model into evaluation mode
         self.autoencoder.eval()
 
         # no need to calculate the gradients for our outputs
         with torch.no_grad():
-            loop = tqdm(enumerate(self.valid_loader), total=len(self.valid_loader), leave=True)
+            loop = tqdm(enumerate(data_loader), total=len(data_loader), leave=True)
 
             for _, (ae_input, _) in loop:
                 # put data on correct device
