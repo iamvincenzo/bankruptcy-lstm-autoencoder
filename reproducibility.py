@@ -1,4 +1,10 @@
-# https://wandb.ai/sauravmaheshkar/RSNA-MICCAI/reports/How-to-Set-Random-Seeds-in-PyTorch-and-Tensorflow--VmlldzoxMDA2MDQy
+##############################################################################################################################################
+# SOME REFERENCES: https://wandb.ai/sauravmaheshkar/RSNA-MICCAI/reports/How-to-Set-Random-Seeds-in-PyTorch-and-Tensorflow--VmlldzoxMDA2MDQy #
+#############################################################################################################################################
+
+###########################################################################
+# SOME REFERENCES: https://pytorch.org/docs/stable/notes/randomness.html #
+##########################################################################
 
 import os
 import torch

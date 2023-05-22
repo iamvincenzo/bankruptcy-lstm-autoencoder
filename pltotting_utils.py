@@ -1,7 +1,6 @@
 """ This file includes Python code licensed under the MIT License, 
     Copyright (c) 2018 Bjarte Mehus Sunde. """
 
-import numpy as np
 import matplotlib.pyplot as plt
 
 

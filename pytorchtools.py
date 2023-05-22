@@ -1,13 +1,8 @@
 """ This file includes Python code licensed under the MIT License, 
     Copyright (c) 2018 Bjarte Mehus Sunde. """
 
-import numpy as np
 import torch
-
-# from utils import set_seed
-
-# # setting the seeds for reproducibility
-# set_seed(seed=42)
+import numpy as np
 
 
 class EarlyStopping:
