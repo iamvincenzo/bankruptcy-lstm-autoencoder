@@ -133,12 +133,6 @@ def main(args):
                                      weights_init=args.weights_init)
 
     x, _ = next(iter(train_loader))    
-    input_dim = x.size(2) * x.size(1)
-    output_dim = x.size(1)
-    dense90 = DenseSoftmaxLayer(input_dim=input_dim,
-                                output_dim=output_dim,
-                                weights_init=args.weights_init)
-
     input_dim = x.size(1)
     output_dim = args.num_classes
     dense5 = DenseSoftmaxLayer(input_dim=input_dim,
@@ -146,7 +140,7 @@ def main(args):
                                weights_init=args.weights_init)
 
     # solver for training, validation and test
-    solver = Solver(models=(autoencoder, dense90, dense5),
+    solver = Solver(models=(autoencoder, dense5),
                     train_loader=train_loader,
                     valid_loader=valid_loader,
                     test_loader=test_loader,
