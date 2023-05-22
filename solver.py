@@ -21,10 +21,10 @@ class Solver(object):
         self.model_name = f"lstm_encdec_{self.args.model_name}.pt"
 
         # models to train/validate
-        self.autoencoder, self.dense90, self.dense5 = models
+        self.autoencoder, self.dense5 = models
         self.autoencoder = self.autoencoder.to(device)
-        self.dense90 = self.dense90.to(device)
         self.dense5 = self.dense5.to(device)
+        self.softmax = nn.Softmax(dim=1).to(device)
 
         # load a pretrained model
         if self.args.resume_train or not(self.args.train_only_ae):
@@ -32,12 +32,11 @@ class Solver(object):
 
         # select the loss for optimization
         if self.args.loss == "rec_loss":
-            self.criterion = Rec_Loss()
+            self.ae_criterion = Rec_Loss()
         elif self.args.loss == "mse_loss":
-            self.criterion = nn.MSELoss()
+            self.ae_criterion = nn.MSELoss()
 
-        self.criterion1 = nn.CrossEntropyLoss()
-        self.criterion2 = nn.CrossEntropyLoss()
+        self.d5_criterion = nn.CrossEntropyLoss()
 
         # choose the optimizer
         if self.args.opt == "Adam":
@@ -47,9 +46,7 @@ class Solver(object):
             self.optimizer = optim.SGD(params=self.autoencoder.parameters(),
                                        lr=self.args.lr, momentum=0.9)
             
-        self.optimizer1 = optim.SGD(params=self.dense90.parameters(), 
-                                    lr=0.001, momentum=0.9)
-        self.optimizer2 = optim.SGD(params=self.dense5.parameters(), 
+        self.optimizer1 = optim.SGD(params=self.dense5.parameters(), 
                                     lr=0.001, momentum=0.9)
 
         # other training/validation params
@@ -112,7 +109,7 @@ class Solver(object):
                 enc_output, dec_output = self.autoencoder(ae_input)
 
                 # calculate the loss
-                loss = self.criterion(y_pred=dec_output, y_true=ae_input)
+                loss = self.ae_criterion(y_pred=dec_output, y_true=ae_input)
                 # backward pass: compute gradient of the loss with respect to model parameters
                 loss.backward()
                 # perform a single optimization step (parameter update)
@@ -183,7 +180,7 @@ class Solver(object):
                 _, dec_output = self.autoencoder(ae_input)
 
                 # calculate the loss
-                test_loss = self.criterion(y_pred=dec_output, y_true=ae_input)
+                test_loss = self.ae_criterion(y_pred=dec_output, y_true=ae_input)
 
                 # record training loss
                 valid_losses.append(test_loss.item())
@@ -214,22 +211,21 @@ class Solver(object):
         self.model_name = f"lstm_encdec_{self.args.model_name}.pt"
 
         # to track the training loss as the model trains
-        ae_train_losses, d90_train_losses, d5_train_losses  = [], [], []
+        ae_train_losses, d5_train_losses  = [], []
         # to track the validation loss as the model trains
-        ae_valid_losses, d90_valid_losses, d5_valid_losses  = [], [], []
+        ae_valid_losses, d5_valid_losses  = [], []
         # to track the average training loss per epoch as the model trains
-        ae_avg_train_losses, d90_avg_train_losses, d5_avg_train_losses = [], [], []
+        ae_avg_train_losses, d5_avg_train_losses = [], []
         # to track the average validation loss per epoch as the model trains
-        ae_avg_valid_losses, d90_avg_valid_losses, d5_avg_valid_losses = [], [], []
+        ae_avg_valid_losses, d5_avg_valid_losses = [], []
 
         # initialize the early_stopping object
         check_path = os.path.join(self.args.checkpoint_path, self.model_name)
         early_stopping = EarlyStopping(patience=self.patience,
-                                        verbose=True, path=check_path)
+                                       verbose=True, path=check_path)
 
         # put the models in training mode
         self.autoencoder.train()
-        self.dense90.train()
         self.dense5.train()
 
         # loop over the dataset multiple times
@@ -247,57 +243,48 @@ class Solver(object):
                 # clear the gradients of all optimized variables
                 self.optimizer.zero_grad()
                 self.optimizer1.zero_grad()
-                self.optimizer2.zero_grad()
 
                 # forward pass: compute predicted outputs by passing inputs to the model
                 enc_output, dec_output = self.autoencoder(ae_input)
 
-                # reshape the decoder output to match the input shape required by dense90-net
-                d90_input = dec_output.reshape((dec_output.size(0),
-                                                dec_output.size(2)*dec_output.size(1)))
-                
-                # forward pass: compute predicted outputs by passing inputs to the model
-                d90_output = self.dense90(d90_input)
+                # compute softmax-input
+                rec_prior = reconstruction_for_prior(y_pred=dec_output,
+                                                     y_true=ae_input)
 
-                # compute the dense-net input
+                # compute softmax-output used to obtain d5_input
+                rec_prior_prob = self.softmax(rec_prior)
+                
+                # compute the dense-net input: combine 'enc_output' with 'rec_prior_prob'
                 d5_input = self.compute_dot_product(mat=enc_output, 
-                                                    vec=d90_output)
+                                                    vec=rec_prior_prob)
                 
                 # forward pass: compute predicted outputs by passing inputs to the model
                 d5_output = self.dense5(d5_input) # shape [32, 2]
 
                 # reshape label to match the output shape of dense5-net
-                label = label.squeeze(1).long() # shape [32, 1] --> [32]
-
-                # compute y_true for dense90-net
-                d90_true = reconstruction_for_prior(y_pred=dec_output, 
-                                                    y_true=ae_input)
+                label = label.squeeze(1).long() # shape [32, 1] --> [32]               
 
                 # calculate the loss
-                ae_loss = self.criterion(y_pred=dec_output, y_true=ae_input)
-                d90_loss = self.criterion1(input=d90_output, target=d90_true)
-                d5_loss = self.criterion2(input=d5_output, target=label)
+                ae_loss = self.ae_criterion(y_pred=dec_output, y_true=ae_input)
+                d5_loss = self.d5_criterion(input=d5_output, target=label)
 
                 # backward pass: compute gradient of the loss with respect to model parameters
-                total_loss = ae_loss + d5_loss + d90_loss
+                total_loss = ae_loss + d5_loss
                 total_loss.backward()
                 # ae_loss.backward(retain_graph=True)
-                # d90_loss.backward()
                 # d5_loss.backward()
 
                 # perform a single optimization step (parameter update)
                 self.optimizer.step()
                 self.optimizer1.step()
-                self.optimizer2.step()
 
                 # record training loss
                 ae_train_losses.append(ae_loss.item())
-                d90_train_losses.append(d90_loss.item())
                 d5_train_losses.append(d5_loss.item())
 
             # validate the model at the end of each epoch
-            self.test_all(epoch=epoch, data_loader=self.valid_loader, ae_losses=ae_valid_losses, 
-                          d90_losses=d90_valid_losses, d5_losses=d5_valid_losses, valid=True)
+            self.test_all(epoch=epoch, data_loader=self.valid_loader, 
+                          ae_losses=ae_valid_losses, d5_losses=d5_valid_losses, valid=True)
 
             # # update the learning rate scheduler
             # self.scheduler.step()
@@ -309,38 +296,29 @@ class Solver(object):
             ae_avg_train_losses.append(ae_train_loss)
             ae_avg_valid_losses.append(ae_valid_loss)
 
-            d90_train_loss = np.average(d90_train_losses)
-            d90_valid_loss = np.average(d90_valid_losses)
-            d90_avg_train_losses.append(d90_train_loss)
-            d90_avg_valid_losses.append(d90_valid_loss)
-
             d5_train_loss = np.average(d5_train_losses)
             d5_valid_loss = np.average(d5_valid_losses)
             d5_avg_train_losses.append(d5_train_loss)
             d5_avg_valid_losses.append(d5_valid_loss)
 
+            total_train_loss = ae_train_loss + d5_train_loss
+            total_valid_loss = ae_valid_loss + d5_valid_loss
+
             # print some statistics
             print(f"\nEpoch[{epoch + 1}/{self.num_epochs}] | "
                   f"ae_train-loss: {ae_train_loss:.4f}, ae_validation-loss: {ae_valid_loss:.4f} "
-                  f"d90_train-loss: {d90_train_loss:.4f}, d90_validation-loss: {d90_valid_loss:.4f} "
-                  f"d5_train-loss: {d5_train_loss:.4f}, d5_validation-loss: {d5_valid_loss:.4f} ")  # | lr: {lr_train:.6f}
+                  f"d5_train-loss: {d5_train_loss:.4f}, d5_validation-loss: {d5_valid_loss:.4f} "
+                  f"tot-train_loss: {total_train_loss:.4f},tot-valid_loss: {total_valid_loss:.4f} ") # | lr: {lr_train:.6f}
 
             # print statistics in tensorboard
-            self.writer.add_scalar("ae-training-loss", ae_train_loss,
-                                epoch * len(self.train_loader)) # + batch)
+            self.writer.add_scalar("ae-training-loss", ae_train_loss, 
+                                   epoch * len(self.train_loader)) # + batch)
             self.writer.add_scalar("ae-validation-loss", ae_valid_loss,
                                    epoch * len(self.valid_loader)) # + batch)
-            self.writer.add_scalar("d90-training-loss", d90_train_loss,
-                                epoch * len(self.train_loader)) # + batch)
-            self.writer.add_scalar("d90-validation-loss", d90_valid_loss,
-                                   epoch * len(self.valid_loader)) # + batch)
             self.writer.add_scalar("d5-training-loss", d5_train_loss,
-                                epoch * len(self.train_loader)) # + batch)
+                                   epoch * len(self.train_loader)) # + batch)
             self.writer.add_scalar("d5-validation-loss", d5_valid_loss,
-                                   epoch * len(self.valid_loader)) # + batch)
-            
-            total_train_loss = ae_train_loss + d5_train_loss # + d90_train_loss
-            total_valid_loss = ae_valid_loss + d5_valid_loss # + d90_valid_loss
+                                   epoch * len(self.valid_loader)) # + batch)           
             self.writer.add_scalar("total-train-loss", total_train_loss,
                                    epoch * len(self.train_loader)) # + batch)
             self.writer.add_scalar("total-valid-loss", total_valid_loss,
@@ -349,14 +327,12 @@ class Solver(object):
             # clear lists to track next epoch
             ae_train_losses = []
             ae_valid_losses = []
-            d90_train_losses = []
-            d90_valid_losses = []
             d5_train_losses = []
             d5_valid_losses = []
 
             # early_stopping needs the validation loss to check if it has decresed,
             # and if it has, it will make a checkpoint of the current model
-            tot_loss = ae_valid_loss + d5_valid_loss + d90_valid_loss
+            tot_loss = ae_valid_loss + d5_valid_loss
             early_stopping(tot_loss, self.autoencoder)
 
             if early_stopping.early_stop:
@@ -365,9 +341,6 @@ class Solver(object):
 
         fig = plot_losses(ae_avg_train_losses, ae_avg_valid_losses)
         self.writer.add_figure('ae-loss-graph', fig)
-
-        fig = plot_losses(d90_avg_train_losses, d90_avg_valid_losses)
-        self.writer.add_figure('d90-loss-graph', fig)
 
         fig = plot_losses(d5_avg_train_losses, d5_avg_valid_losses)
         self.writer.add_figure('d5-loss-graph', fig)
@@ -382,27 +355,25 @@ class Solver(object):
         print("\nStarting the inference on the test set...")
 
         epoch=0
-        ae_test_losses, d90_test_losses, d5_test_losses = [], [], []
+        ae_test_losses, d5_test_losses = [], []
 
         # test the model
-        self.test_all(epoch=epoch, data_loader=self.test_loader, ae_losses=ae_test_losses, 
-                      d90_losses=d90_test_losses, d5_losses=d5_test_losses, valid=False)
+        self.test_all(epoch=epoch, data_loader=self.test_loader, 
+                      ae_losses=ae_test_losses, d5_losses=d5_test_losses, valid=False)
 
         # calculate average loss over an epoch
         ae_test_loss = np.average(ae_test_losses)
-        d90_test_loss = np.average(d90_test_losses)
         d5_test_loss = np.average(d5_test_losses)
 
-        # # print some statistics
-        # print(f"\nTest[{epoch + 1}/{epoch + 1}] | ae_test-loss: {ae_test_loss:.4f} "
-        #     #   f"d90_test-loss: {d90_test_loss:.4f} "
-        #       f"d5_test-loss: {d5_test_loss:.4f} ")  # | lr: {lr_train:.6f}
+        # print some statistics
+        print(f"\nTest[{epoch + 1}/{epoch + 1}] | ae_test-loss: {ae_test_loss:.4f} "
+              f"d5_test-loss: {d5_test_loss:.4f} ")  # | lr: {lr_train:.6f}
 
         print("\nInference on the test set Done...\n")
         ###########################################################################################
 
     """ Method used to validate the entire model. """
-    def test_all(self, epoch, data_loader, ae_losses, d90_losses, d5_losses, valid=True):
+    def test_all(self, epoch, data_loader, ae_losses, d5_losses, valid=True):
         if valid:
             num_epochs = self.num_epochs
         else:
@@ -412,7 +383,6 @@ class Solver(object):
 
         # put model into evaluation mode
         self.autoencoder.eval()
-        self.dense90.eval()
         self.dense5.eval()
 
         # no need to calculate the gradients for our outputs
@@ -429,16 +399,16 @@ class Solver(object):
                 # forward pass: compute predicted outputs by passing inputs to the model
                 enc_output, dec_output = self.autoencoder(ae_input)
 
-                # reshape the decoder output to match the input shape required by dense90-net
-                d90_input = dec_output.reshape((dec_output.size(0),
-                                                dec_output.size(2)*dec_output.size(1)))
-                
-                # forward pass: compute predicted outputs by passing inputs to the model
-                d90_output = self.dense90(d90_input)
+                # compute softmax-input
+                rec_prior = reconstruction_for_prior(y_pred=dec_output,
+                                                     y_true=ae_input)
 
-                # compute the dense-net input
+                # compute softmax-output used to obtain d5_input
+                rec_prior_prob = self.softmax(rec_prior)
+                
+                # compute the dense-net input: combine 'enc_output' with 'rec_prior_prob'
                 d5_input = self.compute_dot_product(mat=enc_output, 
-                                                    vec=d90_output)
+                                                    vec=rec_prior_prob)
                 
                 # forward pass: compute predicted outputs by passing inputs to the model
                 d5_output = self.dense5(d5_input)
@@ -446,18 +416,12 @@ class Solver(object):
                 # reshape label to match the output shape of dense5-net
                 label = label.squeeze(1).long() # shape [32, 1] --> [32]
 
-                # compute y_true for dense90-net
-                d90_true = reconstruction_for_prior(y_pred=dec_output, 
-                                                    y_true=ae_input)
-
                 # calculate the loss
-                ae_loss = self.criterion(y_pred=dec_output, y_true=ae_input)
-                d90_loss = self.criterion1(input=d90_output, target=d90_true)
-                d5_loss = self.criterion2(input=d5_output, target=label)
+                ae_loss = self.ae_criterion(y_pred=dec_output, y_true=ae_input)
+                d5_loss = self.d5_criterion(input=d5_output, target=label)
 
                 # record training loss
                 ae_losses.append(ae_loss.item())
-                d90_losses.append(d90_loss.item())
                 d5_losses.append(d5_loss.item())
 
                 # append predictions and targets for computing epoch accuracy
@@ -468,20 +432,10 @@ class Solver(object):
             all_predictions = torch.cat(total_predictions, dim=0)
             all_targets = torch.cat(total_targets, dim=0)
 
-            # compute the accuracy, precision and recall
+            # compute some metrics
             (accuracy, precision, recall, f1_score, 
              specificity, conf_matr) = compute_metrics(predictions=all_predictions,
-                                                       targets=all_targets)
-            
-            # # print statistics in tensorboard
-            # self.writer.add_scalar("valid-accuracy", accuracy,
-            #                         epoch * len(data_loader)) # + all_targets.size(0))
-            # self.writer.add_scalar("valid-precision", precision,
-            #                         epoch * len(data_loader)) # + all_targets.size(0))
-            # self.writer.add_scalar("valid-recall", recall,
-            #                         epoch * len(data_loader)) #+ all_targets.size(0))
-            # self.writer.add_scalar("valid-f1_score", f1_score,
-            #                         epoch * len(data_loader)) # + all_targets.size(0))            
+                                                       targets=all_targets)            
 
             print(f"\nEpoch [{epoch+1}/{num_epochs}] | Accuracy: {accuracy:.3f}, "
                   f"Precision: {precision:.3f}, Recall: {recall:.3f}, F1-score: {f1_score:.3f}, "
@@ -491,5 +445,4 @@ class Solver(object):
 
         # reput model into training mode
         self.autoencoder.train()
-        self.dense90.train()
         self.dense5.train()
