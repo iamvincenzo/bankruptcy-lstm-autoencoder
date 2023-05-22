@@ -41,14 +41,14 @@ class Solver(object):
 
         # choose the optimizer
         if self.args.opt == "Adam":
-            self.optimizer = optim.Adam(params=self.autoencoder.parameters(),
+            self.ae_optimizer = optim.Adam(params=self.autoencoder.parameters(),
                                         lr=self.args.lr, betas=(0.9, 0.999))
         elif self.args.opt == "SGD":
-            self.optimizer = optim.SGD(params=self.autoencoder.parameters(),
+            self.ae_optimizer = optim.SGD(params=self.autoencoder.parameters(),
                                        lr=self.args.lr, momentum=0.9)
             
-        self.optimizer1 = optim.SGD(params=self.dense5.parameters(), 
-                                    lr=0.001, momentum=0.9)
+        self.d5_optimizer = optim.SGD(params=self.dense5.parameters(),  
+                                      lr=0.001, momentum=0.9)
 
         # other training/validation params
         self.num_epochs = args.num_epochs
@@ -104,7 +104,7 @@ class Solver(object):
                 ae_input = ae_input.to(self.device)
 
                 # clear the gradients of all optimized variables
-                self.optimizer.zero_grad()
+                self.ae_optimizer.zero_grad()
 
                 # forward pass: compute predicted outputs by passing inputs to the model
                 enc_output, dec_output = self.autoencoder(ae_input)
@@ -114,7 +114,7 @@ class Solver(object):
                 # backward pass: compute gradient of the loss with respect to model parameters
                 loss.backward()
                 # perform a single optimization step (parameter update)
-                self.optimizer.step()
+                self.ae_optimizer.step()
 
                 # record training loss
                 train_losses.append(loss.item())
@@ -245,7 +245,7 @@ class Solver(object):
 
     """ Method used to train and validate the entire model with an early stopping implementation. """
     def train_all(self):
-        print(f"\nStarting entire model training...")
+        print(f"\nStarting (LSTM-AE + FC-Dense5)-model training...")
 
         # do not overwrite ae_model
         self.args.model_name = self.args.model_name + "_failed_all"
@@ -286,8 +286,8 @@ class Solver(object):
                 ae_input, label = ae_input.to(self.device), label.to(self.device)
 
                 # clear the gradients of all optimized variables
-                self.optimizer.zero_grad()
-                self.optimizer1.zero_grad()
+                self.ae_optimizer.zero_grad()
+                self.d5_optimizer.zero_grad()
 
                 # forward pass: compute predicted outputs by passing inputs to the model
                 enc_output, dec_output = self.autoencoder(ae_input)
@@ -320,8 +320,8 @@ class Solver(object):
                 # d5_loss.backward()
 
                 # perform a single optimization step (parameter update)
-                self.optimizer.step()
-                self.optimizer1.step()
+                self.ae_optimizer.step()
+                self.d5_optimizer.step()
 
                 # record training loss
                 ae_train_losses.append(ae_loss.item())
@@ -393,7 +393,7 @@ class Solver(object):
         self.writer.flush()
         self.writer.close()
 
-        print("\nEntire model training Done...\n")
+        print("\n(LSTM-AE + FC-Dense5)-model training Done...\n")
 
         # INFERECE (TEST-SET)
         ###########################################################################################
