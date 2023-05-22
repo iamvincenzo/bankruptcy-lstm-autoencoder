@@ -38,10 +38,7 @@ class Solver(object):
             self.ae_criterion = nn.MSELoss()
 
         # select the loss for FC-Dense5 optimization
-        if False:
-            self.d5_criterion = nn.CrossEntropyLoss()
-        else:
-            self.d5_criterion = nn.BCELoss()
+        self.d5_criterion = nn.CrossEntropyLoss()
 
         # choose the optimizer
         if self.args.opt == "Adam":
