@@ -138,7 +138,7 @@ class DenseSoftmaxLayer(nn.Module):
 
     """ Method used to initialize the weights of the network. """
     def weights_initialization(self):
-        print(f"\nPerforming Linear weights initialization...")
+        print(f"\nPerforming FC-Net weights initialization...")
         for m in self.modules():
             if isinstance(m, nn.Linear):
                 nn.init.kaiming_uniform_(m.weight)
