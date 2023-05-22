@@ -188,6 +188,16 @@ class Solver(object):
         # reput model into training mode
         self.autoencoder.train()
 
+    """" Method used to freeze the LSTM-AE weights """
+    def freeze_lstm_ae(self):
+        print(f"\nFreezing LSTM-AE weights...")
+
+        for n, m in self.autoencoder.named_parameters():
+            m.requires_grad = False
+        
+        for n, m in self.autoencoder.named_parameters():
+            print(f"name: {n}, trainable: {m.requires_grad}")
+        
     """ Method used to compute the dot product between a matrix and a vector. """
     def compute_dot_product(self, mat, vec):    
         # mat-shape: [32, 5, 5] # vec-shape: [32, 5]        
@@ -223,6 +233,10 @@ class Solver(object):
         check_path = os.path.join(self.args.checkpoint_path, self.model_name)
         early_stopping = EarlyStopping(patience=self.patience,
                                        verbose=True, path=check_path)
+        
+        # lstm-autoencoder is not trained during the classification task
+        if self.args.freeze_ae:
+            self.freeze_lstm_ae()
 
         # put the models in training mode
         self.autoencoder.train()
@@ -236,7 +250,7 @@ class Solver(object):
             loop = tqdm(enumerate(self.train_loader),
                         total=len(self.train_loader), leave=True)
 
-            for batch, (ae_input, label) in loop:          
+            for batch_id, (ae_input, label) in loop:          
                 # put data on correct device
                 ae_input, label = ae_input.to(self.device), label.to(self.device)
 
