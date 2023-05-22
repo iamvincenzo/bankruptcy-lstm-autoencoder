@@ -31,6 +31,8 @@ def get_args():
     #######################################################################################
     parser.add_argument("--train_only_ae", action="store_true",
                         help="train only the autoencoder model on alive companies")
+    parser.add_argument("--freeze_ae", action="store_true",
+                        help="the lstm-autoencoder is not trained during the classification task")
     #######################################################################################
 
     # model-infos

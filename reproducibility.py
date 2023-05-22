@@ -27,4 +27,4 @@ def set_seed(seed=42):
     torch.backends.cudnn.benchmark = False
     torch.use_deterministic_algorithms(mode=True)
     os.environ["PYTHONHASHSEED"] = str(seed)
-    print(f"Random seed set as {seed}")
+    print(f"\nRandom seed set as: {seed}")
