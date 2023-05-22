@@ -308,7 +308,7 @@ class Solver(object):
             print(f"\nEpoch[{epoch + 1}/{self.num_epochs}] | "
                   f"ae_train-loss: {ae_train_loss:.4f}, ae_validation-loss: {ae_valid_loss:.4f} "
                   f"d5_train-loss: {d5_train_loss:.4f}, d5_validation-loss: {d5_valid_loss:.4f} "
-                  f"tot-train_loss: {total_train_loss:.4f},tot-valid_loss: {total_valid_loss:.4f} ") # | lr: {lr_train:.6f}
+                  f"tot-train_loss: {total_train_loss:.4f}, tot-valid_loss: {total_valid_loss:.4f} ") # | lr: {lr_train:.6f}
 
             # print statistics in tensorboard
             self.writer.add_scalar("ae-training-loss", ae_train_loss, 
