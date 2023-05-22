@@ -125,7 +125,12 @@ class DenseSoftmaxLayer(nn.Module):
         self.input_dim = input_dim
         self.output_dim = output_dim
 
-        self.fc1 = nn.Linear(self.input_dim, self.output_dim)
+        # network architecture
+        self.fc1 = nn.Sequential(
+            nn.Linear(self.input_dim, self.input_dim, bias=True),
+            nn.ReLU(inplace=True)
+        )
+        self.fc2 = nn.Linear(self.input_dim, self.output_dim, bias=True)
         self.softmax = nn.Softmax(dim=1)
 
         if weights_init:
