@@ -3,6 +3,7 @@ import torch
 import numpy as np
 import pandas as pd
 from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
 
 """ Function used to import data from csv files. """
 def get_data(data_path, seq_len, train_only_ae, verbose=False):
@@ -46,6 +47,31 @@ def get_data(data_path, seq_len, train_only_ae, verbose=False):
     print(f"\nLoading data Done...")
 
     return np_train, np_valid, np_test
+
+""" Function used to obtain a dataloader containing 
+    only failed companies of the validation set."""
+def get_valid_failed_dataloader(data_path, seq_len, batch_size, workers):
+    print(f"\nLoading validation data with only failed companies...")
+    # import data into dataframe
+    df_valid = pd.read_csv(os.path.join(data_path, "validation_ready.csv"))
+    # removes 'alive' company from the data
+    df_valid = df_valid[df_valid.status_label == 'failed']        
+    # remove useless columns
+    df_valid.drop(columns=["fyear", "cik", "status_label"], inplace=True)
+    # convert data into numpy array
+    np_valid = df_valid.to_numpy(copy=False, dtype=np.float32)
+    print(f"\ntotal valid-samples: \n{np_valid.shape[0]//seq_len}")
+    
+    # dataset creation
+    valid_failed_dataset = CustomDataset(x=np_valid, seq_len=seq_len)
+
+    # dataloader creation
+    valid_failed_loader = DataLoader(dataset=valid_failed_dataset, batch_size=batch_size, 
+                                     num_workers=workers, shuffle=False)
+    
+    print(f"\nLoading data with only failed companies Done...")
+    
+    return valid_failed_loader
 
 
 """ Custom class used to create the training, validation and test sets. """
