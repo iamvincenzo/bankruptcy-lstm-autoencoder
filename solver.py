@@ -31,24 +31,29 @@ class Solver(object):
         if self.args.resume_train or not(self.args.train_only_ae):
             self.load_model(self.autoencoder, device)
 
-        # select the loss for optimization
+        # select the loss for LSTM-AE optimization
         if self.args.loss == "rec_loss":
             self.ae_criterion = Rec_Loss()
         elif self.args.loss == "mse_loss":
             self.ae_criterion = nn.MSELoss()
 
-        self.d5_criterion = nn.CrossEntropyLoss()
+        # select the loss for FC-Dense5 optimization
+        if False:
+            self.d5_criterion = nn.CrossEntropyLoss()
+        else:
+            self.d5_criterion = nn.BCELoss()
 
         # choose the optimizer
         if self.args.opt == "Adam":
             self.ae_optimizer = optim.Adam(params=self.autoencoder.parameters(),
-                                        lr=self.args.lr, betas=(0.9, 0.999))
+                                           lr=self.args.lr, betas=(0.9, 0.999))
+            self.d5_optimizer = optim.Adam(params=self.autoencoder.parameters(),
+                                           lr=self.args.lr, betas=(0.9, 0.999))
         elif self.args.opt == "SGD":
             self.ae_optimizer = optim.SGD(params=self.autoencoder.parameters(),
-                                       lr=self.args.lr, momentum=0.9)
-            
-        self.d5_optimizer = optim.SGD(params=self.dense5.parameters(),  
-                                      lr=0.001, momentum=0.9)
+                                       lr=self.args.lr, momentum=0.9)            
+            self.d5_optimizer = optim.SGD(params=self.dense5.parameters(),  
+                                        lr=0.001, momentum=0.9)
 
         # other training/validation params
         self.num_epochs = args.num_epochs
