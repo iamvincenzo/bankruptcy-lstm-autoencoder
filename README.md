@@ -3,4 +3,4 @@ This is a machine learning project that employs LSTM autoencoders to reconstruct
 
 ## Network Architecture
 
-![plot](./results/architettura_progetto.png)
+![plot](./results/project_architecture.jpg)
