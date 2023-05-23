@@ -250,7 +250,7 @@ class Solver(object):
         print(f"\nStarting (LSTM-AE + FC-Dense5)-model training...")
 
         # do not overwrite ae_model
-        self.args.model_name = self.args.model_name + "_failed_all"
+        self.args.model_name = self.args.model_name + "_classif_all"
         self.model_name = f"lstm_encdec_{self.args.model_name}.pt"
 
         # to track the training loss as the model trains
