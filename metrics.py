@@ -80,8 +80,8 @@ def compute_metrics(predictions, targets):
     # print(tp, fp, fn, tn)
 
     # create the confusion matrix
-    confusion_matrix = torch.tensor([[tp, fp], 
-                                     [fn, tn]])
+    confusion_matrix = torch.tensor([[tn, fp], 
+                                     [fn, tp]])
 
     return accuracy, precision, recall, f1_score, specificity, confusion_matrix
 

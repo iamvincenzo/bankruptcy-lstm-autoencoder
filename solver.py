@@ -10,6 +10,7 @@ from metrics import compute_metrics
 from pytorchtools import EarlyStopping
 from pltotting_utils import plot_losses
 from metrics import reconstruction_for_prior
+from pltotting_utils import plot_confusion_matrix
 from custom_dataset import get_valid_failed_dataloader
 
 
@@ -499,6 +500,17 @@ class Solver(object):
                   f"Specificity: {specificity:.3f}")
 
             print(f"\nConfusion_matrix: \n{conf_matr}")
+
+            confusion_matrix_np = conf_matr.numpy()
+            tn, fp, fn, tp = confusion_matrix_np.ravel()
+
+            if valid:
+                text = "confusion-matrix-valid"
+            else:
+                text = "confusion-matrix-test"
+
+            fig = plot_confusion_matrix(tn=tn, fp=fp, fn=fn, tp=tp)
+            self.writer.add_figure(text, fig)         
 
         # reput model into training mode
         self.autoencoder.train()
