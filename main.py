@@ -131,9 +131,9 @@ def main(args):
     test_loader = DataLoader(dataset=test_dataset, batch_size=args.batch_size,
                              num_workers=args.workers, worker_init_fn=seed_worker, generator=g, shuffle=False)
     
-    # # function used for results reproducibility
-    # # called again because of the seed_worker function execution ???
-    # set_seed(seed=args.random_seed)
+    # function used for results reproducibility
+    # called again because of the seed_worker function execution
+    set_seed(seed=args.random_seed)
 
     # select the device on which to place tensors
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
