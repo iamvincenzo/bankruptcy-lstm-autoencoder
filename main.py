@@ -10,7 +10,7 @@ from custom_dataset import get_data
 from models import DenseSoftmaxLayer
 from models import EncoderDecoderLSTM
 from custom_dataset import CustomDataset
-from reproducibility import set_seed, SeedWorker #seed_worker
+from reproducibility import set_seed, seed_worker
 
 
 """ Function used to get command line parameters. """
@@ -120,9 +120,6 @@ def main(args):
     # used for results reproducibility
     g = torch.Generator()
     g.manual_seed(args.random_seed)
-
-    # callable objects
-    seed_worker = SeedWorker(args.random_seed)
 
     # dataloader creation
     train_loader = DataLoader(dataset=train_dataset, batch_size=args.batch_size,
