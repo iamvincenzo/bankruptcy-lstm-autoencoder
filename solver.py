@@ -521,7 +521,7 @@ class Solver(object):
                 text = "confusion-matrix-test"
 
             fig = plot_confusion_matrix(tn=tn, fp=fp, fn=fn, tp=tp)
-            self.writer.add_figure(text, fig)         
+            self.writer.add_figure(text, fig, global_step=epoch * len(self.train_loader)) # + batch)         
 
         # reput model into training mode
         self.autoencoder.train()
