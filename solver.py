@@ -396,9 +396,6 @@ class Solver(object):
         fig = plot_losses(d5_avg_train_losses, d5_avg_valid_losses)
         self.writer.add_figure('d5-loss-graph', fig)
 
-        self.writer.flush()
-        self.writer.close()
-
         print("\n(LSTM-AE + FC-Dense5)-model training Done...\n")
 
         # INFERECE (TEST-SET)
@@ -421,6 +418,9 @@ class Solver(object):
               f"d5_test-loss: {d5_test_loss:.4f} ")  
 
         print("\nInference on the test set Done...\n")
+
+        self.writer.flush()
+        self.writer.close()
         ###########################################################################################
 
     """ Method used to validate the entire model. """
