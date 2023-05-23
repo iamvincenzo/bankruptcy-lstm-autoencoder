@@ -501,6 +501,17 @@ class Solver(object):
 
             print(f"\nConfusion_matrix: \n{conf_matr}")
 
+            if valid:
+                # print statistics in tensorboard
+                self.writer.add_scalar("validation-precision", precision,
+                                       epoch * len(data_loader)) # + batch)
+                self.writer.add_scalar("validation-recall", recall,
+                                       epoch * len(data_loader)) # + batch)
+                self.writer.add_scalar("validation-f1_score", f1_score,
+                                       epoch * len(self.train_loader)) # + batch)
+                self.writer.add_scalar("d5-specificity", specificity,
+                                       epoch * len(data_loader)) # + batch)
+
             confusion_matrix_np = conf_matr.numpy()
             tn, fp, fn, tp = confusion_matrix_np.ravel()
 
