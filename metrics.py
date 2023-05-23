@@ -86,25 +86,6 @@ def compute_metrics(predictions, targets):
     return accuracy, precision, recall, f1_score, specificity, confusion_matrix
 
 
-
-# def reconstruction_loss(y_true, y_pred):
-#     out = torch.sub(y_true, y_pred).pow(2)
-#     print("\n\n", out.shape)
-#     print("\n\n", out)
-#     # dim = 2 indicates to pick columns 
-#     # element per row to compute the mean per row
-#     out = torch.mean(input=out, dim=2)  # , keepdim=True)
-#     print("\n\n", out.shape)
-#     print("\n\n", out)
-#     out = torch.sqrt(out)
-#     print("\n\n", out.shape)
-#     print("\n\n", out)
-#     out = torch.mean(out)
-#     print("\n\n", out.shape)
-#     print("\n\n", out)
-
-#     return out
-
 """ Test. 
 if __name__ == "__main__":
     x1 = torch.rand((2, 2, 2))
@@ -122,8 +103,6 @@ if __name__ == "__main__":
 
     print
 """
-
-
 
 # # output-example
 # y_true:
