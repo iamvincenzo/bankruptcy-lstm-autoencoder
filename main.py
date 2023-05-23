@@ -37,9 +37,9 @@ def get_args():
 
     # model-infos
     #######################################################################################
-    parser.add_argument("--run_name", type=str, default="run_0",
+    parser.add_argument("--run_name", type=str, default="classif_rs15",
                         help="the name assigned to the current run")
-    parser.add_argument("--model_name", type=str, default="alive_ae",
+    parser.add_argument("--model_name", type=str, default="ae_rs15",
                         help="the name of the model to be saved or loaded")
     #######################################################################################
 
