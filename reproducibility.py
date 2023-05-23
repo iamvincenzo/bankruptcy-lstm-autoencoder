@@ -11,11 +11,20 @@ import torch
 import random
 import numpy as np
 
-""" Function used for results reproducibility. """
-def seed_worker(worker_id):
-    worker_seed = torch.initial_seed() % 2**32
-    np.random.seed(worker_seed)
-    random.seed(worker_seed)
+# """ Function used for results reproducibility. """
+# def seed_worker(worker_id):
+#     worker_seed = torch.initial_seed() % 2**32
+#     np.random.seed(worker_seed)
+#     random.seed(worker_seed)
+
+""" Callable objects. """
+class SeedWorker:
+    def __init__(self, worker_seed):
+        self.worker_seed = worker_seed
+
+    def __call__(self):
+        np.random.seed(self.worker_seed)
+        random.seed(self.worker_seed)
 
 """ Function used for results reproducibility. """
 def set_seed(seed=42):

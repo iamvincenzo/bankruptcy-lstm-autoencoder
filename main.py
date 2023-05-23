@@ -10,7 +10,7 @@ from custom_dataset import get_data
 from models import DenseSoftmaxLayer
 from models import EncoderDecoderLSTM
 from custom_dataset import CustomDataset
-from reproducibility import set_seed, seed_worker
+from reproducibility import set_seed, SeedWorker #seed_worker
 
 
 """ Function used to get command line parameters. """
@@ -121,6 +121,9 @@ def main(args):
     g = torch.Generator()
     g.manual_seed(args.random_seed)
 
+    # callable objects
+    seed_worker = SeedWorker(args.random_seed)
+
     # dataloader creation
     train_loader = DataLoader(dataset=train_dataset, batch_size=args.batch_size,
                               num_workers=args.workers, worker_init_fn=seed_worker, generator=g, shuffle=False)
@@ -129,9 +132,9 @@ def main(args):
     test_loader = DataLoader(dataset=test_dataset, batch_size=args.batch_size,
                              num_workers=args.workers, worker_init_fn=seed_worker, generator=g, shuffle=False)
     
-    # function used for results reproducibility
-    # called again because of the seed_worker function execution ???
-    set_seed(seed=args.random_seed)
+    # # function used for results reproducibility
+    # # called again because of the seed_worker function execution ???
+    # set_seed(seed=args.random_seed)
 
     # select the device on which to place tensors
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
