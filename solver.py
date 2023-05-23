@@ -137,7 +137,7 @@ class Solver(object):
 
             # print some statistics
             print(f"\nEpoch[{epoch + 1}/{self.num_epochs}] | train-loss: {train_loss:.4f}, "
-                  f"validation-loss: {valid_loss:.4f}")  # | lr: {lr_train:.6f}
+                  f"validation-loss: {valid_loss:.4f}")  
 
             # print statistics in tensorboard
             self.writer.add_scalar("only-ae-training-loss", train_loss,
@@ -184,7 +184,7 @@ class Solver(object):
 
         # print some statistics
         print(f"\nTest[{epoch + 1}/{epoch + 1}] | "
-              f"mean-reconstruction-error on failed companies: {valid_failed_loss}")  # | lr: {lr_train:.6f}
+              f"mean-reconstruction-error on failed companies: {valid_failed_loss}")  
 
         print("\nInference on the validation-set with only failed companies Done...\n")
         ###########################################################################################
@@ -232,8 +232,9 @@ class Solver(object):
             print(f"name: {n}, trainable: {m.requires_grad}")
         
     """ Method used to compute the dot product between a matrix and a vector. """
-    def compute_dot_product(self, mat, vec):    
-        # mat-shape: [32, 5, 5] # vec-shape: [32, 5]        
+    def compute_dot_product(self, mat, vec):
+        # mat-shape: [32, 5, 5] 
+        # vec-shape: [32, 5]        
         # expand dimensions of the vector to match the shape of the matrix
         exp_vec = vec.unsqueeze(2) # shape: [32, 5, 1]
 
@@ -249,7 +250,7 @@ class Solver(object):
     def train_all(self):
         print(f"\nStarting (LSTM-AE + FC-Dense5)-model training...")
 
-        # do not overwrite ae_model
+        # do not overwrite aeutoencoder trained model
         self.args.model_name = self.args.model_name + "_classif_all"
         self.model_name = f"lstm_encdec_{self.args.model_name}.pt"
 
@@ -267,7 +268,8 @@ class Solver(object):
         early_stopping = EarlyStopping(patience=self.patience,
                                        verbose=True, path=check_path)
         
-        # lstm-autoencoder is not trained during the classification task
+        # lstm-autoencoder is not 
+        # trained during the classification task
         if self.args.freeze_ae:
             self.freeze_lstm_ae()
 
@@ -294,17 +296,24 @@ class Solver(object):
                 # forward pass: compute predicted outputs by passing inputs to the model
                 enc_output, dec_output = self.autoencoder(ae_input)
 
-                # compute softmax-input
-                rec_prior = reconstruction_for_prior(y_pred=dec_output,
-                                                     y_true=ae_input)
+                # compute the d5 input differently for config2
+                if self.args.config_2:
+                    # shape[32, 25]
+                    d5_input = enc_output.reshape(enc_output.size(0), 
+                                                  enc_output.size(1) * enc_output.size(1))
+                else:
+                    # compute softmax-input
+                    rec_prior = reconstruction_for_prior(y_pred=dec_output,
+                                                         y_true=ae_input)
 
-                # compute softmax-output used to obtain d5_input
-                rec_prior_prob = self.softmax(rec_prior)
+                    # compute softmax-output used to obtain d5_input
+                    rec_prior_prob = self.softmax(rec_prior)
                 
-                # compute the dense-net input: combine 'enc_output' with 'rec_prior_prob'
-                d5_input = self.compute_dot_product(mat=enc_output, 
-                                                    vec=rec_prior_prob)
-                
+                    # shape[32, 5]
+                    # compute the fc-dense5-net input: combine 'enc_output' with 'rec_prior_prob'
+                    d5_input = self.compute_dot_product(mat=enc_output, 
+                                                        vec=rec_prior_prob)             
+                      
                 # forward pass: compute predicted outputs by passing inputs to the model
                 d5_output = self.dense5(d5_input) # shape [32, 2]
 
@@ -318,8 +327,6 @@ class Solver(object):
                 # backward pass: compute gradient of the loss with respect to model parameters
                 total_loss = ae_loss + d5_loss
                 total_loss.backward()
-                # ae_loss.backward(retain_graph=True)
-                # d5_loss.backward()
 
                 # perform a single optimization step (parameter update)
                 self.ae_optimizer.step()
@@ -332,10 +339,6 @@ class Solver(object):
             # validate the model at the end of each epoch
             self.test_all(epoch=epoch, data_loader=self.valid_loader, 
                           ae_losses=ae_valid_losses, d5_losses=d5_valid_losses, valid=True)
-
-            # # update the learning rate scheduler
-            # self.scheduler.step()
-            # lr_train = self.scheduler.get_last_lr()[0]
 
             # calculate average loss over an epoch
             ae_train_loss = np.average(ae_train_losses)
@@ -355,7 +358,7 @@ class Solver(object):
             print(f"\nEpoch[{epoch + 1}/{self.num_epochs}] | "
                   f"ae_train-loss: {ae_train_loss:.4f}, ae_validation-loss: {ae_valid_loss:.4f} "
                   f"d5_train-loss: {d5_train_loss:.4f}, d5_validation-loss: {d5_valid_loss:.4f} "
-                  f"tot-train_loss: {total_train_loss:.4f}, tot-valid_loss: {total_valid_loss:.4f} ") # | lr: {lr_train:.6f}
+                  f"tot-train_loss: {total_train_loss:.4f}, tot-valid_loss: {total_valid_loss:.4f} ") 
 
             # print statistics in tensorboard
             self.writer.add_scalar("ae-training-loss", ae_train_loss, 
@@ -414,7 +417,7 @@ class Solver(object):
 
         # print some statistics
         print(f"\nTest[{epoch + 1}/{epoch + 1}] | ae_test-loss: {ae_test_loss:.4f} "
-              f"d5_test-loss: {d5_test_loss:.4f} ")  # | lr: {lr_train:.6f}
+              f"d5_test-loss: {d5_test_loss:.4f} ")  
 
         print("\nInference on the test set Done...\n")
         ###########################################################################################
@@ -446,16 +449,23 @@ class Solver(object):
                 # forward pass: compute predicted outputs by passing inputs to the model
                 enc_output, dec_output = self.autoencoder(ae_input)
 
-                # compute softmax-input
-                rec_prior = reconstruction_for_prior(y_pred=dec_output,
-                                                     y_true=ae_input)
+                # compute the d5 input differently for config2
+                if self.args.config_2:
+                    # shape[32, 25]
+                    d5_input = enc_output.reshape(enc_output.size(0), 
+                                                  enc_output.size(1) * enc_output.size(1))
+                else:
+                    # compute softmax-input
+                    rec_prior = reconstruction_for_prior(y_pred=dec_output,
+                                                         y_true=ae_input)
 
-                # compute softmax-output used to obtain d5_input
-                rec_prior_prob = self.softmax(rec_prior)
+                    # compute softmax-output used to obtain d5_input
+                    rec_prior_prob = self.softmax(rec_prior)
                 
-                # compute the dense-net input: combine 'enc_output' with 'rec_prior_prob'
-                d5_input = self.compute_dot_product(mat=enc_output, 
-                                                    vec=rec_prior_prob)
+                    # shape[32, 5]
+                    # compute the fc-dense5-net input: combine 'enc_output' with 'rec_prior_prob'
+                    d5_input = self.compute_dot_product(mat=enc_output, 
+                                                        vec=rec_prior_prob)
                 
                 # forward pass: compute predicted outputs by passing inputs to the model
                 d5_output = self.dense5(d5_input)

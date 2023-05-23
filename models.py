@@ -13,11 +13,11 @@ import torch.nn as nn
 
 
 """ Class form LSTM in Encoder-Decoder configuration. """
-class EncoderDecoderLSTM(nn.Module):
+class LSTMAutoencoder(nn.Module):
     """ Initialize configurations. """
     def __init__(self, enc_input_size, dec_input_size, enc_hidden_size, dec_hidden_size, num_layers, 
                  device, weights_init=True, bidirectional=False):
-        super(EncoderDecoderLSTM, self).__init__()
+        super(LSTMAutoencoder, self).__init__()
         # the number of expected features in the input x
         self.enc_input_size = enc_input_size
         # the number of expected features in the output of the encoder
@@ -198,7 +198,7 @@ if __name__ == "__main__":
     x = torch.rand((batch_size, seq_len, num_features))
 
     # model definition
-    model = EncoderDecoderLSTM(enc_input_size=enc_input_size, 
+    model = LSTMAutoencoder(enc_input_size=enc_input_size, 
                                dec_input_size= dec_input_size,
                                enc_hidden_size=enc_hidden_size, 
                                dec_hidden_size=dec_hidden_size, 

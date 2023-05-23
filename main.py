@@ -8,7 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 from solver import Solver
 from custom_dataset import get_data
 from models import DenseSoftmaxLayer
-from models import EncoderDecoderLSTM
+from models import LSTMAutoencoder
 from custom_dataset import CustomDataset
 from reproducibility import set_seed, seed_worker
 
@@ -33,6 +33,8 @@ def get_args():
                         help="train only the autoencoder model on alive companies")
     parser.add_argument("--freeze_ae", action="store_true",
                         help="the lstm-autoencoder is not trained during the classification task")
+    parser.add_argument("--config_2", action="store_true",
+                        help="this configuration train the fc-dense5-net using directly the encoder output")
     #######################################################################################
 
     # model-infos
@@ -138,23 +140,34 @@ def main(args):
     print(f"\ndevice: \n{device}")
 
     # lstm in encoder-decoder configuration
-    autoencoder = EncoderDecoderLSTM(enc_input_size=args.enc_input_size,
+    autoencoder = LSTMAutoencoder(enc_input_size=args.enc_input_size,
                                      dec_input_size=args.dec_input_size,
                                      enc_hidden_size=args.enc_hidden_size,
                                      dec_hidden_size=args.dec_hidden_size,
                                      num_layers=args.num_layers,
                                      device=device,
                                      weights_init=args.weights_init)
-    # get input shape
-    x, _ = next(iter(train_loader))    
-    input_dim = x.size(1)
-    output_dim = args.num_classes
+    
+    # get input/output shape
+    x, _ = next(iter(train_loader))        
+    if args.config_2:
+        print("\nTraining configuration: 2...")
+        # the fc-dense5-net is trained 
+        # using directly the reshaped output of the encoder
+        input_dim = x.size(1) * x.size(1) # shape[bs, 25]
+        output_dim = args.num_classes
+    else:
+        print("\nTraining configuration: 1...")
+        # the fc-dense5-net is trained using the output 
+        # of the encoder combined with the softmax probabilities results
+        input_dim = x.size(1) # shape[bs, 5]
+        output_dim = args.num_classes
     
     # standard fc-net for classification task
     dense5 = DenseSoftmaxLayer(input_dim=input_dim,
                                output_dim=output_dim,
                                weights_init=args.weights_init)
-
+    
     # solver for training, validation and test
     solver = Solver(models=(autoencoder, dense5),
                     train_loader=train_loader,
