@@ -141,12 +141,12 @@ def main(args):
 
     # lstm in encoder-decoder configuration
     autoencoder = LSTMAutoencoder(enc_input_size=args.enc_input_size,
-                                     dec_input_size=args.dec_input_size,
-                                     enc_hidden_size=args.enc_hidden_size,
-                                     dec_hidden_size=args.dec_hidden_size,
-                                     num_layers=args.num_layers,
-                                     device=device,
-                                     weights_init=args.weights_init)
+                                  dec_input_size=args.dec_input_size,
+                                  enc_hidden_size=args.enc_hidden_size,
+                                  dec_hidden_size=args.dec_hidden_size,
+                                  num_layers=args.num_layers,
+                                  device=device,
+                                  weights_init=args.weights_init)
     
     # get input/output shape
     x, _ = next(iter(train_loader))        
