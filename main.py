@@ -10,6 +10,7 @@ from custom_dataset import get_data
 from models import DenseSoftmaxLayer
 from models import LSTMAutoencoder
 from custom_dataset import CustomDataset
+from models import LSTMAutoencoderAttention
 from reproducibility import set_seed, seed_worker
 
 
@@ -35,6 +36,8 @@ def get_args():
                         help="the lstm-autoencoder is not trained during the classification task")
     parser.add_argument("--config_2", action="store_true",
                         help="this configuration train the fc-dense5-net using directly the encoder output")
+    parser.add_argument("--train_ae_luong_att", action="store_true",
+                        help="this configuration train the LSTM-AE using the Luong Attention")
     #######################################################################################
 
     # model-infos
@@ -139,14 +142,23 @@ def main(args):
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     print(f"\ndevice: \n{device}")
 
-    # lstm in encoder-decoder configuration
-    autoencoder = LSTMAutoencoder(enc_input_size=args.enc_input_size,
-                                  dec_input_size=args.dec_input_size,
-                                  enc_hidden_size=args.enc_hidden_size,
-                                  dec_hidden_size=args.dec_hidden_size,
-                                  num_layers=args.num_layers,
-                                  device=device,
-                                  weights_init=args.weights_init)
+    if args.train_ae_luong_att:
+        # lstm in encoder-decoder configuration with luong attention
+        autoencoder = LSTMAutoencoderAttention(input_size=args.enc_input_size, 
+                                               hidden_size=args.enc_hidden_size,
+                                               num_layers=args.num_layers,
+                                               device=device,
+                                               bidirectional=False,
+                                               batch_first=True)
+    else:
+        # lstm in encoder-decoder configuration
+        autoencoder = LSTMAutoencoder(enc_input_size=args.enc_input_size,
+                                      dec_input_size=args.dec_input_size,
+                                      enc_hidden_size=args.enc_hidden_size,
+                                      dec_hidden_size=args.dec_hidden_size,
+                                      num_layers=args.num_layers,
+                                      device=device,
+                                      weights_init=args.weights_init)
     
     # get input/output shape
     x, _ = next(iter(train_loader))        
@@ -179,6 +191,8 @@ def main(args):
 
     if args.train_only_ae:
         solver.train_ae()
+    elif args.train_ae_luong_att:
+        solver.train_ae_luong_att()
     else:
         solver.train_all()
 

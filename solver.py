@@ -102,7 +102,7 @@ class Solver(object):
             # used for creating a terminal progress bar
             loop = tqdm(enumerate(self.train_loader), total=len(self.train_loader), leave=True)
 
-            for batch, (ae_input, _) in loop:
+            for batch_id, (ae_input, _) in loop:
                 # put data on correct device
                 ae_input = ae_input.to(self.device)
 
@@ -232,7 +232,7 @@ class Solver(object):
         for n, m in self.autoencoder.named_parameters():
             print(f"name: {n}, trainable: {m.requires_grad}")
         
-    """ Method used to compute the dot product between a matrix and a vector. """
+    """ Method used to compute the batch dot product between a matrix and a vector. """
     def compute_dot_product(self, mat, vec):
         # mat-shape: [32, 5, 5] 
         # vec-shape: [32, 5]        
@@ -526,3 +526,141 @@ class Solver(object):
         # reput model into training mode
         self.autoencoder.train()
         self.dense5.train()
+
+    """ Method used to compute the batch-matrix multiplication. """
+    def compute_matrix_prod(self, mat1, mat2):
+        dot_prod = torch.matmul(mat1, mat2)
+
+        return dot_prod
+
+    def train_ae_luong_att(self):
+        print(f"\nStarting LSTM-Autoencoder training with Luong Attention...")
+
+        # to track the training loss as the model trains
+        train_losses = []
+        # to track the validation loss as the model trains
+        valid_losses = []
+        # to track the average training loss per epoch as the model trains
+        avg_train_losses = []
+        # to track the average validation loss per epoch as the model trains
+        avg_valid_losses = []
+
+        # initialize the early_stopping object
+        check_path = os.path.join(self.args.checkpoint_path, self.model_name)
+        early_stopping = EarlyStopping(patience=self.patience,
+                                       verbose=True, path=check_path)
+
+        # put the model in training mode
+        self.autoencoder.train()
+
+        # loop over the dataset multiple times
+        for epoch in range(self.num_epochs):
+            print(f"\nTraining iteration | Epoch[{epoch + 1}/{self.num_epochs}]\n")
+
+            # used for creating a terminal progress bar
+            loop = tqdm(enumerate(self.train_loader), total=len(self.train_loader), leave=True)
+
+            for batch_id, (ae_input, _) in loop:
+                # put data on correct device
+                ae_input = ae_input.to(self.device)
+
+                # clear the gradients of all optimized variables
+                self.ae_optimizer.zero_grad()
+
+                # forward pass: compute predicted outputs by passing inputs to the model
+                enc_output, dec_output = self.autoencoder(ae_input)
+
+                # method used to compute the dot product between the embedding and the output of the decoder
+                emb_dot_out = self.compute_matrix_prod(enc_output, dec_output)
+
+                # used to compute the attention
+                attention = self.softmax(emb_dot_out)
+
+                # used to compute the context
+                context = self.compute_matrix_prod(attention, enc_output)
+
+                # concatenate the context with the decoder output
+                concat = torch.cat([context, dec_output], dim=2)
+
+
+        #         # calculate the loss
+        #         loss = self.ae_criterion(y_pred=dec_output, y_true=ae_input)
+        #         # backward pass: compute gradient of the loss with respect to model parameters
+        #         loss.backward()
+        #         # perform a single optimization step (parameter update)
+        #         self.ae_optimizer.step()
+
+        #         # record training loss
+        #         train_losses.append(loss.item())
+
+        #     # validate the model at the end of each epoch
+        #     self.test_ae(epoch=epoch, data_loader=self.valid_loader, 
+        #                  valid_losses=valid_losses, valid=True)
+
+        #     # # update the learning rate scheduler
+        #     # self.scheduler.step()
+        #     # lr_train = self.scheduler.get_last_lr()[0]
+
+        #     # calculate average loss over an epoch
+        #     train_loss = np.average(train_losses)
+        #     valid_loss = np.average(valid_losses)
+        #     avg_train_losses.append(train_loss)
+        #     avg_valid_losses.append(valid_loss)
+
+        #     # print some statistics
+        #     print(f"\nEpoch[{epoch + 1}/{self.num_epochs}] | train-loss: {train_loss:.4f}, "
+        #           f"validation-loss: {valid_loss:.4f}")  
+
+        #     # print statistics in tensorboard
+        #     self.writer.add_scalar("only-ae-training-loss", train_loss,
+        #                            epoch * len(self.train_loader)) # + batch)
+        #     self.writer.add_scalar("only-ae-validation-loss", valid_loss,
+        #                            epoch * len(self.valid_loader)) # + batch)
+
+        #     # clear lists to track next epoch
+        #     train_losses = []
+        #     valid_losses = []
+
+        #     # early_stopping needs the validation loss to check if it has decresed,
+        #     # and if it has, it will make a checkpoint of the current model
+        #     early_stopping(valid_loss, self.autoencoder)
+
+        #     if early_stopping.early_stop:
+        #         print("\nEarly stopping...")
+        #         break
+
+        # fig = plot_losses(avg_train_losses, avg_valid_losses)
+        # self.writer.add_figure('loss-graph', fig)
+
+        # self.writer.flush()
+        # self.writer.close()
+
+        print(f"\nLSTM-Autoencoder training with Luong Attention Done...")
+
+        # # INFERECE (VALIDATION-SET) with only failed companies
+        # ###########################################################################################
+        # print("\nStarting the inference on the validation-set with only failed companies...")
+
+        # valid_failed_loader = get_valid_failed_dataloader(self.args.data_path,
+        #                                                   self.args.seq_len,
+        #                                                   self.args.batch_size,
+        #                                                   self.args.workers)
+        # epoch=0
+        # valid_failed_losses = []
+        # # validate the model on failed companies
+        # self.test_ae(epoch=epoch, data_loader=valid_failed_loader,
+        #              valid_losses=valid_failed_losses, valid=False)
+
+        # # calculate average loss over an epoch
+        # valid_failed_loss = np.average(valid_failed_losses)
+
+        # # print some statistics
+        # print(f"\nTest[{epoch + 1}/{epoch + 1}] | "
+        #       f"mean-reconstruction-error on failed companies: {valid_failed_loss}")  
+
+        # print("\nInference on the validation-set with only failed companies Done...\n")
+        # ###########################################################################################
+
+    def test_ae_luong_att(self, epoch, data_loader, ae_losses, d5_losses, valid=True):
+        pass
+    

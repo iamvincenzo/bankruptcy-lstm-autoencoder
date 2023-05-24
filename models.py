@@ -157,8 +157,84 @@ class DenseSoftmaxLayer(nn.Module):
         return x
 
 
+""" Class for LSTM Autoencoder with Luong Attention mechanism. """
+class LSTMAutoencoderAttention(nn.Module):
+    """ Initialize configurations. """
+    def __init__(self, input_size, hidden_size, num_layers, device, bidirectional, batch_first=True):
+        super(LSTMAutoencoderAttention, self).__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.D = 2 if bidirectional else 1
+        self.device = device
+
+        self.encoder = nn.LSTM(input_size=input_size, hidden_size=hidden_size, 
+                               num_layers=num_layers, bidirectional=bidirectional, batch_first=batch_first)
+        
+        self.decoder = nn.LSTM(input_size=input_size, hidden_size=hidden_size, 
+                               num_layers=num_layers, bidirectional=bidirectional, batch_first=batch_first)
+        
+        self.fc = nn.Linear(input_size * hidden_size, input_size * hidden_size)
+
+    """ Method used to initialize the weights of the network. """
+    def weights_initialization(self):
+        print('\nPerforming LSTM-AE weights initialization...')
+
+        for name, p in self.named_parameters():
+            if 'lstm' in name:
+                if 'weight_ih' in name:
+                    nn.init.xavier_uniform_(p.data)
+                elif 'weight_hh' in name:
+                    nn.init.orthogonal_(p.data)
+                elif 'bias_ih' in name:
+                    p.data.fill_(0)
+                    # Set forget-gate bias to 1
+                    n = p.size(0)
+                    p.data[(n // 4):(n // 2)].fill_(1)
+                elif 'bias_hh' in name:
+                    p.data.fill_(0)
+            elif 'fc' in name:
+                if 'weight' in name:
+                    nn.init.xavier_uniform_(p.data)
+                elif 'bias' in name:
+                    p.data.fill_(0)
+
+    """ Method used to define the forward pass of the input through the network during the training. """
+    def forward(self, x):
+        batch_size = x.size(0)
+
+        h_0 = torch.zeros((self.D*self.num_layers, 
+                           batch_size, self.hidden_size)).to(self.device)
+        c_0 = torch.zeros((self.D*self.num_layers, 
+                           batch_size, self.hidden_size)).to(self.device)
+        enc_output, (h_e, c_e) = self.encoder(x, (h_0, c_0))
+
+        dec_output, (h_d, c_d) = self.encoder(x, (h_e, c_e))
+
+        return enc_output, dec_output
+
+
 """ Runs the simulation.
 if __name__ == "__main__":
+    x = torch.rand((32, 5, 18))
+
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+    input_size = x.size(2)
+    hidden_size = x.size(1)
+    num_layers = 1
+
+    model = LSTMAutoencoderAttention(input_size=input_size, 
+                                     hidden_size=hidden_size, 
+                                     num_layers=num_layers, 
+                                     device=device,
+                                     bidirectional=False,
+                                     batch_first=True)
+
+    enc_output, dec_output = model(x)
+
+    print(f"\nenc_output: {enc_output.shape}, dec_output: {dec_output.shape}...\n")
+
     x = torch.rand((32, 5, 18))
 
     input_dim = x.size(2) * x.size(1)
