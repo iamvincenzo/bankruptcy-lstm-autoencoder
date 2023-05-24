@@ -527,6 +527,7 @@ class Solver(object):
         self.autoencoder.train()
         self.dense5.train()
 
+
     """ Method used to compute the batch-matrix multiplication. """
     def compute_matrix_prod(self, mat1, mat2):
         dot_prod = torch.matmul(mat1, mat2)
@@ -663,4 +664,3 @@ class Solver(object):
 
     def test_ae_luong_att(self, epoch, data_loader, ae_losses, d5_losses, valid=True):
         pass
-    
