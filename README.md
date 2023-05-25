@@ -7,7 +7,9 @@ This is a machine learning project that employs LSTM autoencoders to reconstruct
 
 ## Network Architectures
 
-![plot](./results/project_architecture.jpg)
+![plot1](./results/project_architecture_cfg1.jpg)
+![plot2](./results/project_architecture_cfg2.jpg)
+![plot3](./results/project_architecture_cfg3.jpg)
 
 - `custom_dataset.py`: This module is responsible for generating dataloaders for training and validation.
 
@@ -143,15 +145,15 @@ python main.py --random_seed 15 --train_only_ae --run_name train_only_ae --model
 ```
 
 ```shell
-python bankruptcy-lstm-autoencoder/main.py --random_seed 15 --run_name classif_rs15 --model_name only_ae_rs15 --num_epochs 10 --opt Adam --loss rec_loss --patience 2 --weights_init
+python main.py --random_seed 15 --run_name classif_rs15 --model_name only_ae_rs15 --num_epochs 10 --opt Adam --loss rec_loss --patience 2 --weights_init
 ```
 
 ```shell
-python bankruptcy-lstm-autoencoder/main.py --random_seed 15 --train_only_ae --train_luong_att --run_name train_only_ae_luong_att --model_name only_ae_rs15_luong_att --num_epochs 3000 --loss rec_loss --patience 30 --weights_init
+python main.py --random_seed 15 --train_only_ae --train_luong_att --run_name train_only_ae_luong_att --model_name only_ae_rs15_luong_att --num_epochs 3000 --loss rec_loss --patience 30 --weights_init
 ```
 
 ```shell
-python bankruptcy-lstm-autoencoder/main.py --random_seed 15 --train_luong_att --run_name classif_rs15_luong_att --model_name only_ae_rs15_luong_att --num_epochs 10 --opt Adam --loss rec_loss --patience 2 --weights_init
+python main.py --random_seed 15 --train_luong_att --run_name classif_rs15_luong_att --model_name only_ae_rs15_luong_att --num_epochs 10 --opt Adam --loss rec_loss --patience 2 --weights_init
 ```
 
 Make sure you are in the project directory and have activated your virtual environment (if applicable) before running the above command.
