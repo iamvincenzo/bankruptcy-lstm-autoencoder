@@ -32,19 +32,19 @@ def get_args():
     #######################################################################################
     parser.add_argument("--train_only_ae", action="store_true",
                         help="train only the autoencoder model on alive companies")
+    parser.add_argument("--train_luong_att", action="store_true",
+                        help="this configuration train the LSTM-AE using the Luong Attention")
     parser.add_argument("--freeze_ae", action="store_true",
                         help="the lstm-autoencoder is not trained during the classification task")
     parser.add_argument("--config_2", action="store_true",
-                        help="this configuration train the fc-dense5-net using directly the encoder output")
-    parser.add_argument("--train_ae_luong_att", action="store_true",
-                        help="this configuration train the LSTM-AE using the Luong Attention")
+                        help="this configuration train the fc-dense5-net using directly the encoder output")    
     #######################################################################################
 
     # model-infos
     #######################################################################################
     parser.add_argument("--run_name", type=str, default="classif_rs15",
                         help="the name assigned to the current run")
-    parser.add_argument("--model_name", type=str, default="ae_rs15",
+    parser.add_argument("--model_name", type=str, default="only_ae_rs15",
                         help="the name of the model to be saved or loaded")
     #######################################################################################
 
@@ -142,8 +142,9 @@ def main(args):
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     print(f"\ndevice: \n{device}")
 
-    if args.train_ae_luong_att:
-        # lstm in encoder-decoder configuration with luong attention
+    if args.train_luong_att:
+        print(f"\nLSTM-AE with Luong Attention selected...")
+        # lstm in encoder-decoder configuration with luong attention (CONFIGURATION_3)
         autoencoder = LSTMAutoencoderAttention(input_size=args.enc_input_size, 
                                                hidden_size=args.enc_hidden_size,
                                                num_layers=args.num_layers,
@@ -151,7 +152,8 @@ def main(args):
                                                bidirectional=False,
                                                batch_first=True)
     else:
-        # lstm in encoder-decoder configuration
+        print(f"\nLSTM-AE without Luong Attention selected...")
+        # lstm in encoder-decoder configuration (CONFIGURATION_1) (CONFIGURATION_2)
         autoencoder = LSTMAutoencoder(enc_input_size=args.enc_input_size,
                                       dec_input_size=args.dec_input_size,
                                       enc_hidden_size=args.enc_hidden_size,
@@ -162,13 +164,13 @@ def main(args):
     
     # get input/output shape
     x, _ = next(iter(train_loader))        
-    if args.config_2:
+    if args.config_2: # (CONFIGURATION_2)
         print("\nTraining configuration: 2...")
         # the fc-dense5-net is trained 
         # using directly the reshaped output of the encoder
         input_dim = x.size(1) * x.size(1) # shape[bs, 25]
         output_dim = args.num_classes
-    else:
+    else: # (CONFIGURATION_1)
         print("\nTraining configuration: 1...")
         # the fc-dense5-net is trained using the output 
         # of the encoder combined with the softmax probabilities results
@@ -190,11 +192,15 @@ def main(args):
                     args=args)
 
     if args.train_only_ae:
-        solver.train_ae()
-    elif args.train_ae_luong_att:
-        solver.train_ae_luong_att()
+        if args.train_luong_att:
+            solver.train_ae_luong_att()
+        else:
+            solver.train_ae()
     else:
-        solver.train_all()
+        if args.train_luong_att:
+            solver.train_all_ae_luong_att()
+        else:
+            solver.train_all()
 
 
 """ Runs the simulation. """

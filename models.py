@@ -174,7 +174,9 @@ class LSTMAutoencoderAttention(nn.Module):
         self.decoder = nn.LSTM(input_size=input_size, hidden_size=hidden_size, 
                                num_layers=num_layers, bidirectional=bidirectional, batch_first=batch_first)
         
-        self.fc = nn.Linear(input_size * hidden_size, input_size * hidden_size)
+        self.softmax = nn.Softmax(dim=1)
+
+        self.fc = nn.Linear(2 * hidden_size, input_size)
 
     """ Method used to initialize the weights of the network. """
     def weights_initialization(self):
@@ -207,11 +209,25 @@ class LSTMAutoencoderAttention(nn.Module):
                            batch_size, self.hidden_size)).to(self.device)
         c_0 = torch.zeros((self.D*self.num_layers, 
                            batch_size, self.hidden_size)).to(self.device)
-        enc_output, (h_e, c_e) = self.encoder(x, (h_0, c_0))
+        enc_output, (h_e, c_e) = self.encoder(x, (h_0, c_0)) # shape [bs, 5, 5]
+        dec_output, (h_d, c_d) = self.encoder(x, (h_e, c_e)) # shape [bs, 5, 5]
 
-        dec_output, (h_d, c_d) = self.encoder(x, (h_e, c_e))
+        # dot product between the embedding and the output of the decoder
+        emb_dot_out = torch.bmm(enc_output, dec_output) # shape [bs, 5, 5]
 
-        return enc_output, dec_output
+        # used to compute the attention
+        attention = self.softmax(emb_dot_out) # shape [bs, 5, 5]
+
+        # used to compute the context
+        context = torch.bmm(attention, enc_output) # shape [bs, 5, 5]
+
+        # concatenate the context with the decoder output
+        concat = torch.cat([context, dec_output], dim=2) # shape [bs, 5, 10]
+
+        # reconstruct the input
+        output = self.fc(concat) #shape [bs, 5, 18]
+
+        return enc_output, dec_output, output
 
 
 """ Runs the simulation.
