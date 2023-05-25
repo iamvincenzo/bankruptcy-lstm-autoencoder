@@ -91,8 +91,6 @@ class Solver(object):
 
     """" Method used to freeze the LSTM-AE weights. """
     def freeze_lstm_ae(self):
-        print(f"\nFreezing LSTM-AE weights...")
-
         for n, m in self.autoencoder.named_parameters():
             m.requires_grad = False
         
@@ -271,6 +269,7 @@ class Solver(object):
         # lstm-autoencoder is not 
         # trained during the classification task
         if self.args.freeze_ae:
+            print(f"\nFreezing LSTM-AE weights...")
             self.freeze_lstm_ae()
 
         # put the models in training mode
@@ -698,6 +697,7 @@ class Solver(object):
         # lstm-autoencoder is not 
         # trained during the classification task
         if self.args.freeze_ae:
+            print(f"\nFreezing LSTM-AE + Luong Att. weights...")
             self.freeze_lstm_ae()
 
         # put the models in training mode
