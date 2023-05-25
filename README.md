@@ -1,5 +1,9 @@
 # bankruptcy-lstm-autoencoder (ENG)
-This is a machine learning project that employs LSTM autoencoders to reconstruct input data. The end goal is to detach the decoder after training the encoder, and attach a separate fully connected module to predict the state of a company (whether it's healthy or at risk of bankruptcy).
+Predicting corporate bankruptcy is one of the fundamental tasks in credit risk assessment. Machine learning (ML) enabled the development of several models for bankruptcy prediction. The most challenging aspect: dealing with the class imbalance due to the rarity of bankruptcy events in the real economy.
+
+The main objective of this research is to compare the performance of three different architectures employed in predicting corporate bankruptcy, by combining a classification task with an anomaly detection task (specifically: reconstruction task with LSTM-Autoencoder).
+
+This is a machine learning project that employs LSTM autoencoders to reconstruct input data. The end goal is to use the embedding of the encoder after training and attach a separate fully connected module to predict the state of a company (whether it's healthy or at risk of bankruptcy). The end goal can be reached using three different architectures illustrated in the schemas below.
 
 ## Network Architecture
 
