@@ -21,7 +21,7 @@ def get_args():
     # data-parameters
     #######################################################################################
     parser.add_argument("--data_path", type=str, default="./data",
-                        help="path were to get the raw-dataset")
+                        help="path where to get the raw-dataset")
     parser.add_argument("--seq_len", type=int, default=5,
                         help="the lenght of the time-series sequence")
     parser.add_argument("--num_classes", type=int, default=2,
@@ -31,9 +31,9 @@ def get_args():
     # model-to-train
     #######################################################################################
     parser.add_argument("--train_only_ae", action="store_true",
-                        help="train only the autoencoder model on alive companies")
+                        help="this parameter is used to set the configuration which trains the LSTM-AE without the Luong Attention mechanism only on alive companies")
     parser.add_argument("--train_luong_att", action="store_true",
-                        help="this configuration train the LSTM-AE using the Luong Attention")
+                        help="this parameter is used to set the configuration which trains the LSTM-AE using the Luong Attention mechanism only on alive companies")
     parser.add_argument("--freeze_ae", action="store_true",
                         help="the lstm-autoencoder is not trained during the classification task")
     parser.add_argument("--config_2", action="store_true",
