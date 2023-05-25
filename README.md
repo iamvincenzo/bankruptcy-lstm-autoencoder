@@ -1,4 +1,4 @@
-# bankruptcy-lstm-autoencoder (ENG)
+# Bankruptcy-LSTM-Autoencoder
 Predicting corporate bankruptcy is one of the fundamental tasks in credit risk assessment. Machine learning (ML) enabled the development of several models for bankruptcy prediction. The most challenging aspect: dealing with the class imbalance due to the rarity of bankruptcy events in the real economy.
 
 The main objective of this research is to compare the performance of three different architectures employed in predicting corporate bankruptcy, by combining a classification task with an anomaly detection task (specifically: reconstruction task with LSTM-Autoencoder).
@@ -10,6 +10,8 @@ This is a machine learning project that employs LSTM autoencoders to reconstruct
 ![plot1](./results/project_architecture_cfg1.jpg)
 ![plot2](./results/project_architecture_cfg2.jpg)
 ![plot3](./results/project_architecture_cfg3.jpg)
+
+## More Details
 
 - `custom_dataset.py`: This module is responsible for generating dataloaders for training and validation.
 
