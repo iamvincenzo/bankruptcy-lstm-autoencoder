@@ -5,7 +5,7 @@ The main objective of this research is to compare the performance of three diffe
 
 This is a machine learning project that employs LSTM autoencoders to reconstruct input data. The end goal is to use the embedding of the encoder after training and attach a separate fully connected module to predict the state of a company (whether it's healthy or at risk of bankruptcy). The end goal can be reached using three different architectures illustrated in the schemas below.
 
-## Network Architecture
+## Network Architectures
 
 ![plot](./results/project_architecture.jpg)
 
@@ -29,7 +29,7 @@ This is a machine learning project that employs LSTM autoencoders to reconstruct
 
 The **results** are contained within the `results/final_considerations.pdf` file.
 
-**The dataset is containted inside the directory data** 
+The **dataset** is containted inside the directory `results/data.zip`.
 
 **Other interesting resources:**
 
@@ -159,5 +159,12 @@ Make sure you are in the project directory and have activated your virtual envir
 ### Additional Notes
 
 - Modify the `main.py` file according to your needs or replace it with your own Python script.
+- Inside results folder you can find some checkpoints of models. 
+- Inside the results folder, you can find several runs that can be visualized using TensorBoard with the following command:
+
+```shell
+tensorboard --loddir=runs
+```
+Make sure you are in the project directory and have activated your virtual environment (if applicable) before running the above command.
 
 Happy coding!
