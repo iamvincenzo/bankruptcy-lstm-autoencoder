@@ -33,7 +33,7 @@ The **results** are contained within the `results/final_considerations.pdf` file
 
 **Other interesting resources:**
 
-- **[Machine Learning for Bankruptcy Prediction in the American Stock Market: Dataset and Benchmarks]**(https://scholar.google.com/citations?view_op=view_citation&hl=it&user=XaGrJdQAAAAJ&sortby=pubdate&citation_for_view=XaGrJdQAAAAJ:qxL8FJ1GzNcC)
+- **[Machine Learning for Bankruptcy Prediction in the American Stock Market: Dataset and Benchmarks](https://scholar.google.com/citations?view_op=view_citation&hl=it&user=XaGrJdQAAAAJ&sortby=pubdate&citation_for_view=XaGrJdQAAAAJ:qxL8FJ1GzNcC)**
 
 ## The parameters that can be provided through the command line and allow customization of the execution are:
 
