@@ -165,7 +165,7 @@ Make sure you are in the project directory and have activated your virtual envir
 - Inside the results folder, you can find several runs that can be visualized using TensorBoard with the following command:
 
 ```shell
-tensorboard --loddir=runs
+tensorboard --logdir=runs
 ```
 Make sure you are in the project directory and have activated your virtual environment (if applicable) before running the above command.
 
