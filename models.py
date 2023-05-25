@@ -11,7 +11,7 @@
 import torch
 import torch.nn as nn
 
-
+# CONFIGURATION-1/2
 """ Class form LSTM in Encoder-Decoder configuration. """
 class LSTMAutoencoder(nn.Module):
     """ Initialize configurations. """
@@ -117,46 +117,7 @@ class LSTMAutoencoder(nn.Module):
         return enc_output, dec_output
 
 
-""" Class for DenseLayer with Softmax at the end of the LSTM Decoder. """
-class DenseSoftmaxLayer(nn.Module):
-    """ Initialize configurations. """
-    def __init__(self, input_dim, output_dim, weights_init=True):
-        super(DenseSoftmaxLayer, self).__init__()
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-
-        # network architecture
-        self.fc1 = nn.Sequential(
-            nn.Linear(self.input_dim, self.input_dim, bias=True),
-            nn.ReLU(inplace=True)
-        )
-        self.fc2 = nn.Linear(self.input_dim, self.output_dim, bias=True)
-        self.softmax = nn.Softmax(dim=1)
-
-        if weights_init:
-            self.weights_initialization()
-
-    """ Method used to initialize the weights of the network. """
-    def weights_initialization(self):
-        print(f"\nPerforming FC-Net weights initialization...")
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.kaiming_uniform_(m.weight)
-                nn.init.constant_(m.bias, 0)
-
-    """ Method used to define the forward pass of the input through the network during the training. """
-    def forward(self, x):
-        # print(f"\ninput-shape: {x.shape}")
-        x = self.fc1(x)
-        # print(f"\nfc1-shape: {x.shape}")
-        x = self.fc2(x)
-        # print(f"\nfc2-shape: {x.shape}")
-        x = self.softmax(x)
-        # print(f"\nsoftmax-shape: {x.shape}")
-
-        return x
-
-
+# CONFIGURATION-3
 """ Class for LSTM Autoencoder with Luong Attention mechanism. """
 class LSTMAutoencoderAttention(nn.Module):
     """ Initialize configurations. """
@@ -230,72 +191,42 @@ class LSTMAutoencoderAttention(nn.Module):
         return enc_output, dec_output, output
 
 
-""" Runs the simulation.
-if __name__ == "__main__":
-    x = torch.rand((32, 5, 18))
+""" Class for DenseLayer with Softmax at the end of the LSTM Decoder. """
+class DenseSoftmaxLayer(nn.Module):
+    """ Initialize configurations. """
+    def __init__(self, input_dim, output_dim, weights_init=True):
+        super(DenseSoftmaxLayer, self).__init__()
+        self.input_dim = input_dim
+        self.output_dim = output_dim
 
-    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        # network architecture
+        self.fc1 = nn.Sequential(
+            nn.Linear(self.input_dim, self.input_dim, bias=True),
+            nn.ReLU(inplace=True)
+        )
+        self.fc2 = nn.Linear(self.input_dim, self.output_dim, bias=True)
+        self.softmax = nn.Softmax(dim=1)
 
-    input_size = x.size(2)
-    hidden_size = x.size(1)
-    num_layers = 1
+        if weights_init:
+            self.weights_initialization()
 
-    model = LSTMAutoencoderAttention(input_size=input_size, 
-                                     hidden_size=hidden_size, 
-                                     num_layers=num_layers, 
-                                     device=device,
-                                     bidirectional=False,
-                                     batch_first=True)
+    """ Method used to initialize the weights of the network. """
+    def weights_initialization(self):
+        print(f"\nPerforming FC-Net weights initialization...")
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.kaiming_uniform_(m.weight)
+                nn.init.constant_(m.bias, 0)
 
-    enc_output, dec_output = model(x)
+    """ Method used to define the forward pass of the input through the network during the training. """
+    def forward(self, x):
+        # print(f"\ninput-shape: {x.shape}")
+        x = self.fc1(x)
+        # print(f"\nfc1-shape: {x.shape}")
+        x = self.fc2(x)
+        # print(f"\nfc2-shape: {x.shape}")
+        x = self.softmax(x)
+        # print(f"\nsoftmax-shape: {x.shape}")
 
-    print(f"\nenc_output: {enc_output.shape}, dec_output: {dec_output.shape}...\n")
-
-    x = torch.rand((32, 5, 18))
-
-    input_dim = x.size(2) * x.size(1)
-    output_dim = x.size(1)
-
-    x = x.reshape((32, x.size(2) * x.size(1)))
-
-    model = DenseSoftmaxLayer(input_dim=input_dim, 
-                              output_dim=output_dim)
-
-    output = model(x)
-
-    # output = output.reshape((32, x.size(1), 1))
-
-    # print(f"\nfirst-shape: {output.shape}")
-
-    device = "cuda:0" if torch.cuda.is_available() else "cpu"
-    print(f"\ndevice: \n{device}")
-
-    batch_size = 32
-    seq_len = 5
-    num_features = 18
+        return x
     
-    enc_input_size = 18
-    dec_input_size = 5
-    enc_hidden_size = 5
-    dec_hidden_size = 18
-    num_layers = 1
-
-    # # other dimensions
-    # enc_input_size = 18
-    # dec_input_size = 18
-    # enc_hidden_size = 18
-    # dec_hidden_size = 18
-    # num_layers = 1
-
-    x = torch.rand((batch_size, seq_len, num_features))
-
-    # model definition
-    model = LSTMAutoencoder(enc_input_size=enc_input_size, 
-                               dec_input_size= dec_input_size,
-                               enc_hidden_size=enc_hidden_size, 
-                               dec_hidden_size=dec_hidden_size, 
-                               num_layers=num_layers, 
-                               device=device)        
-    # model output
-    enc_output, dec_output = model(x)
-"""
