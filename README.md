@@ -3,7 +3,7 @@ Predicting corporate bankruptcy is one of the fundamental tasks in credit risk a
 
 The main objective of this research is to compare the performance of three different architectures employed in predicting corporate bankruptcy, by combining a classification task with an anomaly detection task (specifically: reconstruction task with LSTM-Autoencoder).
 
-This is a machine learning project that employs LSTM autoencoders to reconstruct input data. The end goal is to use the embedding of the encoder after training and attach a separate fully connected module to predict the state of a company (whether it's healthy or at risk of bankruptcy). The end goal can be reached using three different architectures illustrated in the schemas below.
+This is a machine learning project that employs LSTM autoencoders to reconstruct input data. The end goal is to use the embedding of the encoder after training and attach a separate fully connected module to predict the state of a company (whether it's healthy or at risk of bankruptcy). The end goal can be reached using three different architectures illustrated in the schemas below. The LSTM-AE is trained using only alive companies. The purpose is to observe the network’s ability to accurately reconstruct alive companies and identify higher error rates when attempting to reconstruct failed companies. This approach enables determining the state of a company based on the committed error. 
 
 ## Network Architectures
 
