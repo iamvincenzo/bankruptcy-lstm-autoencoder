@@ -45,13 +45,13 @@ class Solver(object):
         if self.args.opt == "Adam":
             self.ae_optimizer = optim.Adam(params=self.autoencoder.parameters(),
                                            lr=self.args.lr, betas=(0.9, 0.999))
-            self.d5_optimizer = optim.Adam(params=self.autoencoder.parameters(),
+            self.d5_optimizer = optim.Adam(params=self.dense5.parameters(),
                                            lr=self.args.lr, betas=(0.9, 0.999))
         elif self.args.opt == "SGD":
             self.ae_optimizer = optim.SGD(params=self.autoencoder.parameters(),
-                                       lr=self.args.lr, momentum=0.9)            
-            self.d5_optimizer = optim.SGD(params=self.dense5.parameters(),  
-                                        lr=0.001, momentum=0.9)
+                                          lr=self.args.lr, momentum=0.9)            
+            self.d5_optimizer = optim.SGD(params=self.dense5.parameters(),
+                                          lr=0.001, momentum=0.9)
 
         # other training/validation params
         self.num_epochs = args.num_epochs
@@ -62,10 +62,10 @@ class Solver(object):
         self.writer = writer
         self.device = device
 
-        # visualize the model we built on tensorboard
-        x, _ = next(iter(self.train_loader))
-        self.writer.add_graph(self.autoencoder, x.to(device))
-        self.writer.close()        
+        # # visualize the model we built on tensorboard
+        # x, _ = next(iter(self.train_loader))
+        # self.writer.add_graph(self.autoencoder, x.to(device))
+        # self.writer.close()
 
     """ Method used to load a model. """
     def load_model(self, model, device):
@@ -140,8 +140,10 @@ class Solver(object):
 
                 # calculate the loss
                 loss = self.ae_criterion(y_pred=dec_output, y_true=ae_input)
+
                 # backward pass: compute gradient of the loss with respect to model parameters
                 loss.backward()
+
                 # perform a single optimization step (parameter update)
                 self.ae_optimizer.step()
 
@@ -281,8 +283,7 @@ class Solver(object):
             print(f"\nTraining iteration | Epoch[{epoch + 1}/{self.num_epochs}]\n")
 
             # used for creating a terminal progress bar
-            loop = tqdm(enumerate(self.train_loader),
-                        total=len(self.train_loader), leave=True)
+            loop = tqdm(enumerate(self.train_loader), total=len(self.train_loader), leave=True)
 
             for batch_id, (ae_input, label) in loop:          
                 # put data on correct device
@@ -568,8 +569,10 @@ class Solver(object):
 
                 # calculate the loss
                 loss = self.ae_criterion(y_pred=output, y_true=ae_input)
+
                 # backward pass: compute gradient of the loss with respect to model parameters
                 loss.backward()
+                
                 # perform a single optimization step (parameter update)
                 self.ae_optimizer.step()
 
