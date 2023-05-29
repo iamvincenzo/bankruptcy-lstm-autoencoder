@@ -110,8 +110,8 @@ def main(args):
     t_date = "_" + datetime.now().strftime("%d%m%Y-%H%M%S")
     writer = SummaryWriter("./runs/" + args.run_name + t_date)
 
-    # function used for results reproducibility
-    set_seed(seed=args.random_seed)
+    # # function used for results reproducibility
+    # set_seed(seed=args.random_seed)
 
     # get the data as numpy arrays
     np_train, np_valid, np_test = get_data(data_path=args.data_path, seq_len=args.seq_len,
@@ -122,21 +122,21 @@ def main(args):
     valid_dataset = CustomDataset(x=np_valid, seq_len=args.seq_len)
     test_dataset = CustomDataset(x=np_test, seq_len=args.seq_len)
 
-    # used for results reproducibility
-    g = torch.Generator()
-    g.manual_seed(args.random_seed)
+    # # used for results reproducibility
+    # g = torch.Generator()
+    # g.manual_seed(args.random_seed)
 
     # dataloader creation
     train_loader = DataLoader(dataset=train_dataset, batch_size=args.batch_size,
-                              num_workers=args.workers, worker_init_fn=seed_worker, generator=g, shuffle=False)
+                              num_workers=args.workers, shuffle=False) # , worker_init_fn=seed_worker, generator=g
     valid_loader = DataLoader(dataset=valid_dataset, batch_size=args.batch_size,
-                              num_workers=args.workers, worker_init_fn=seed_worker, generator=g, shuffle=False)
+                              num_workers=args.workers, shuffle=False) # , worker_init_fn=seed_worker, generator=g
     test_loader = DataLoader(dataset=test_dataset, batch_size=args.batch_size,
-                             num_workers=args.workers, worker_init_fn=seed_worker, generator=g, shuffle=False)
+                             num_workers=args.workers, shuffle=False) # , worker_init_fn=seed_worker, generator=g)
     
-    # function used for results reproducibility
-    # called again because of the seed_worker function execution
-    set_seed(seed=args.random_seed)
+    # # function used for results reproducibility
+    # # called again because of the seed_worker function execution
+    # set_seed(seed=args.random_seed)
 
     # select the device on which to place tensors
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
