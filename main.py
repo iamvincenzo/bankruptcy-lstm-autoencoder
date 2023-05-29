@@ -129,9 +129,9 @@ def main(args):
 
     # dataloader creation
     train_loader = DataLoader(dataset=train_dataset, batch_size=args.batch_size,
-                              num_workers=args.workers, shuffle=False) # , worker_init_fn=seed_worker, generator=g
+                              num_workers=args.workers, shuffle=False) # , worker_init_fn=seed_worker, generator=g)
     valid_loader = DataLoader(dataset=valid_dataset, batch_size=args.batch_size,
-                              num_workers=args.workers, shuffle=False) # , worker_init_fn=seed_worker, generator=g
+                              num_workers=args.workers, shuffle=False) # , worker_init_fn=seed_worker, generator=g)
     test_loader = DataLoader(dataset=test_dataset, batch_size=args.batch_size,
                              num_workers=args.workers, shuffle=False) # , worker_init_fn=seed_worker, generator=g)
     
