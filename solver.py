@@ -5,7 +5,7 @@ import torch.nn as nn
 from tqdm import tqdm
 import torch.optim as optim
 
-from metrics import Rec_Loss
+from metrics import RECLoss
 from metrics import compute_metrics
 from pytorchtools import EarlyStopping
 from pltotting_utils import plot_losses
@@ -34,7 +34,7 @@ class Solver(object):
 
         # select the loss for LSTM-AE optimization
         if self.args.loss == "rec_loss":
-            self.ae_criterion = Rec_Loss()
+            self.ae_criterion = RECLoss()
         elif self.args.loss == "mse_loss":
             self.ae_criterion = nn.MSELoss()
 

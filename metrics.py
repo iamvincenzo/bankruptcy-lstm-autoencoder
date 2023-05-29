@@ -4,10 +4,10 @@ import torch.nn as nn
 
 """ Calculation of matrix distance as in scikit-learn but on rows. 
     Do the average for row (and so for year). """
-class Rec_Loss(nn.Module):
+class RECLoss(nn.Module):
     """ Initialize configration. """
     def __init__(self):
-        super(Rec_Loss, self).__init__()
+        super(RECLoss, self).__init__()
     
     """ Method used to compute the loss value. """
     def forward(self, y_pred, y_true):
@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
     reconstruction_loss(x1, x2)
 
-    criterion = Rec_Loss()
+    criterion = RECLoss()
 
     out = criterion(x1, x2)
 
