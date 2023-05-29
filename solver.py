@@ -325,10 +325,10 @@ class Solver(object):
                 d5_loss = self.d5_criterion(input=d5_output, target=label)
 
                 # backward pass: compute gradient of the loss with respect to model parameters
-                # total_loss = ae_loss + d5_loss
-                # total_loss.backward()
-                ae_loss.backward()
-                d5_loss.backward()
+                total_loss = ae_loss + d5_loss
+                total_loss.backward()
+                # ae_loss.backward()
+                # d5_loss.backward()
 
                 # perform a single optimization step (parameter update)
                 self.ae_optimizer.step()
@@ -748,10 +748,10 @@ class Solver(object):
                 d5_loss = self.d5_criterion(input=d5_output, target=label)
 
                 # backward pass: compute gradient of the loss with respect to model parameters
-                # total_loss = ae_loss + d5_loss
-                # total_loss.backward()
-                ae_loss.backward()
-                d5_loss.backward()
+                total_loss = ae_loss + d5_loss
+                total_loss.backward()
+                # ae_loss.backward()
+                # d5_loss.backward()
 
                 # perform a single optimization step (parameter update)
                 self.ae_optimizer.step()
