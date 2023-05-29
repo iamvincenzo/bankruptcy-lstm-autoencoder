@@ -68,13 +68,15 @@ def compute_metrics(predictions, targets):
     fn = torch.sum((predicted_classes == 0) & (targets == 1)).item()
     tn = torch.sum((predicted_classes == 0) & (targets == 0)).item()
 
+    n = 1e-10
+
     # accuracy = (correct_predictions / targets.size(0))
     # 1e-10 is a small value commonly used to avoid division by zero
-    accuracy = (tp + tn) / (tp + fp + fn + tn) # + 1e-10)        
-    precision = tp / (tp + fp + 1e-10)
-    recall = tp / (tp + fn + 1e-10)
-    f1_score = (2 * precision * recall) / (precision + recall + 1e-10)
-    specificity = tn / (tn + fp)
+    accuracy = (tp + tn) / (tp + fp + fn + tn + n)        
+    precision = tp / (tp + fp + n)
+    recall = tp / (tp + fn + n)
+    f1_score = (2 * precision * recall) / (precision + recall + n)
+    specificity = tn / (tn + fp + n)
     
     # tp, fp, tn, fn = confusion(predicted_classes, targets)
     # print(tp, fp, fn, tn)
