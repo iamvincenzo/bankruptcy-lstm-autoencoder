@@ -190,76 +190,77 @@ class LSTMAutoencoderAttention(nn.Module):
 
         return enc_output, dec_output, output
 
+if True:
+    """ Class for DenseLayer with Softmax at the end of the LSTM Decoder. """
+    class DenseSoftmaxLayer(nn.Module):
+        """ Initialize configurations. """
+        def __init__(self, input_dim, output_dim, weights_init=True):
+            super(DenseSoftmaxLayer, self).__init__()
+            self.input_dim = input_dim
+            self.output_dim = output_dim
 
-# """ Class for DenseLayer with Softmax at the end of the LSTM Decoder. """
-# class DenseSoftmaxLayer(nn.Module):
-#     """ Initialize configurations. """
-#     def __init__(self, input_dim, output_dim, weights_init=True):
-#         super(DenseSoftmaxLayer, self).__init__()
-#         self.input_dim = input_dim
-#         self.output_dim = output_dim
+            # network architecture
+            self.fc1 = nn.Linear(self.input_dim, self.output_dim, bias=True)
+            self.softmax = nn.Softmax(dim=1)
 
-#         # network architecture
-#         self.fc1 = nn.Linear(self.input_dim, self.output_dim, bias=True)
-#         self.softmax = nn.Softmax(dim=1)
+            if weights_init:
+                self.weights_initialization()
 
-#         if weights_init:
-#             self.weights_initialization()
+        """ Method used to initialize the weights of the network. """
+        def weights_initialization(self):
+            print(f"\nPerforming FC-Net weights initialization...")
+            for m in self.modules():
+                if isinstance(m, nn.Linear):
+                    nn.init.kaiming_uniform_(m.weight)
+                    nn.init.constant_(m.bias, 0)
 
-#     """ Method used to initialize the weights of the network. """
-#     def weights_initialization(self):
-#         print(f"\nPerforming FC-Net weights initialization...")
-#         for m in self.modules():
-#             if isinstance(m, nn.Linear):
-#                 nn.init.kaiming_uniform_(m.weight)
-#                 nn.init.constant_(m.bias, 0)
+        """ Method used to define the forward pass of the input through the network during the training. """
+        def forward(self, x):
+            # print(f"\ninput-shape: {x.shape}")
+            x = self.fc1(x)
+            # print(f"\nfc1-shape: {x.shape}")
+            x = self.softmax(x)
+            # print(f"\nsoftmax-shape: {x.shape}")
 
-#     """ Method used to define the forward pass of the input through the network during the training. """
-#     def forward(self, x):
-#         # print(f"\ninput-shape: {x.shape}")
-#         x = self.fc1(x)
-#         # print(f"\nfc1-shape: {x.shape}")
-#         x = self.softmax(x)
-#         # print(f"\nsoftmax-shape: {x.shape}")
+            return x
 
-#         return x
+else:
+    """ Class for DenseLayer with Softmax at the end of the LSTM Decoder. """
+    class DenseSoftmaxLayer(nn.Module):
+        """ Initialize configurations. """
+        def __init__(self, input_dim, output_dim, weights_init=True):
+            super(DenseSoftmaxLayer, self).__init__()
+            self.input_dim = input_dim
+            self.output_dim = output_dim
 
-""" Class for DenseLayer with Softmax at the end of the LSTM Decoder. """
-class DenseSoftmaxLayer(nn.Module):
-    """ Initialize configurations. """
-    def __init__(self, input_dim, output_dim, weights_init=True):
-        super(DenseSoftmaxLayer, self).__init__()
-        self.input_dim = input_dim
-        self.output_dim = output_dim
+            # network architecture
+            self.fc1 = nn.Sequential(
+                nn.Linear(self.input_dim, self.input_dim, bias=True),
+                nn.ReLU()
+            )
+            self.fc2 = nn.Linear(self.input_dim, self.output_dim, bias=True)
+            self.softmax = nn.Softmax(dim=1)
 
-        # network architecture
-        self.fc1 = nn.Sequential(
-            nn.Linear(self.input_dim, self.input_dim, bias=True),
-            nn.ReLU()
-        )
-        self.fc2 = nn.Linear(self.input_dim, self.output_dim, bias=True)
-        self.softmax = nn.Softmax(dim=1)
+            if weights_init:
+                self.weights_initialization()
 
-        if weights_init:
-            self.weights_initialization()
+        """ Method used to initialize the weights of the network. """
+        def weights_initialization(self):
+            print(f"\nPerforming FC-Net weights initialization...")
+            for m in self.modules():
+                if isinstance(m, nn.Linear):
+                    nn.init.kaiming_uniform_(m.weight)
+                    nn.init.constant_(m.bias, 0)
 
-    """ Method used to initialize the weights of the network. """
-    def weights_initialization(self):
-        print(f"\nPerforming FC-Net weights initialization...")
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.kaiming_uniform_(m.weight)
-                nn.init.constant_(m.bias, 0)
+        """ Method used to define the forward pass of the input through the network during the training. """
+        def forward(self, x):
+            # print(f"\ninput-shape: {x.shape}")
+            x = self.fc1(x)
+            # print(f"\nfc1-shape: {x.shape}")
+            x = self.fc2(x)
+            # print(f"\nfc2-shape: {x.shape}")
+            x = self.softmax(x)
+            # print(f"\nsoftmax-shape: {x.shape}")
 
-    """ Method used to define the forward pass of the input through the network during the training. """
-    def forward(self, x):
-        # print(f"\ninput-shape: {x.shape}")
-        x = self.fc1(x)
-        # print(f"\nfc1-shape: {x.shape}")
-        x = self.fc2(x)
-        # print(f"\nfc2-shape: {x.shape}")
-        x = self.softmax(x)
-        # print(f"\nsoftmax-shape: {x.shape}")
-
-        return x
+            return x
     
