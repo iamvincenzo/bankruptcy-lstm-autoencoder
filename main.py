@@ -2,6 +2,7 @@ import os
 import torch
 from datetime import datetime
 from argparse import ArgumentParser
+import pytorch_model_summary as pms
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
@@ -190,6 +191,14 @@ def main(args):
                     writer=writer,
                     device=device,
                     args=args)
+    
+    print("\nModels...")
+    # print lstm-autoencoder
+    pms.summary(autoencoder, torch.zeros(x.shape), 
+                batch_size=args.batch_size, max_depth=10, print_summary=True)
+    # print dense5 model
+    pms.summary(dense5, torch.zeros((x.size(0), input_dim)), 
+                batch_size=args.batch_size, max_depth=10, print_summary=True)
 
     if args.train_only_ae:
         if args.train_luong_att:
