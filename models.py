@@ -171,7 +171,7 @@ class LSTMAutoencoderAttention(nn.Module):
         c_0 = torch.zeros((self.D*self.num_layers, 
                            batch_size, self.hidden_size)).to(self.device)
         enc_output, (h_e, c_e) = self.encoder(x, (h_0, c_0)) # shape [bs, 5, 5]
-        dec_output, (h_d, c_d) = self.encoder(x, (h_e, c_e)) # shape [bs, 5, 5]
+        dec_output, (h_d, c_d) = self.decoder(x, (h_e, c_e)) # shape [bs, 5, 5]
 
         # dot product between the embedding and the output of the decoder
         emb_dot_out = torch.bmm(enc_output, dec_output) # shape [bs, 5, 5]
