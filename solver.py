@@ -327,7 +327,7 @@ class Solver(object):
                 # backward pass: compute gradient of the loss with respect to model parameters
                 total_loss = ae_loss + d5_loss
                 total_loss.backward()
-                # ae_loss.backward()
+                # ae_loss.backward(retain_graph=True)
                 # d5_loss.backward()
 
                 # perform a single optimization step (parameter update)
@@ -750,7 +750,7 @@ class Solver(object):
                 # backward pass: compute gradient of the loss with respect to model parameters
                 total_loss = ae_loss + d5_loss
                 total_loss.backward()
-                # ae_loss.backward()
+                # ae_loss.backward(retain_graph=True)
                 # d5_loss.backward()
 
                 # perform a single optimization step (parameter update)
