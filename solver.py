@@ -491,9 +491,12 @@ class Solver(object):
             all_predictions = torch.cat(total_predictions, dim=0)
             all_targets = torch.cat(total_targets, dim=0)
 
+            from torch.nn import Softmax
+            softmax = Softmax(dim=1)
+
             # compute some metrics
             (accuracy, precision, recall, f1_score, 
-             specificity, conf_matr) = compute_metrics(predictions=all_predictions,
+             specificity, conf_matr) = compute_metrics(predictions=softmax(all_predictions),
                                                        targets=all_targets)            
 
             print(f"\nEpoch [{epoch+1}/{num_epochs}] | Accuracy: {accuracy:.3f}, "
@@ -906,9 +909,12 @@ class Solver(object):
             all_predictions = torch.cat(total_predictions, dim=0)
             all_targets = torch.cat(total_targets, dim=0)
 
+            from torch.nn import Softmax
+            softmax = Softmax(dim=1)
+
             # compute some metrics
             (accuracy, precision, recall, f1_score, 
-             specificity, conf_matr) = compute_metrics(predictions=all_predictions,
+             specificity, conf_matr) = compute_metrics(predictions=softmax(all_predictions),
                                                        targets=all_targets)            
 
             print(f"\nEpoch [{epoch+1}/{num_epochs}] | Accuracy: {accuracy:.3f}, "
