@@ -201,7 +201,6 @@ if True:
 
             # network architecture
             self.fc1 = nn.Linear(self.input_dim, self.output_dim, bias=True)
-            self.softmax = nn.Softmax(dim=1)
 
             if weights_init:
                 self.weights_initialization()
@@ -219,8 +218,6 @@ if True:
             # print(f"\ninput-shape: {x.shape}")
             x = self.fc1(x)
             # print(f"\nfc1-shape: {x.shape}")
-            x = self.softmax(x)
-            # print(f"\nsoftmax-shape: {x.shape}")
 
             return x
 
@@ -239,7 +236,6 @@ else:
                 nn.ReLU()
             )
             self.fc2 = nn.Linear(self.input_dim, self.output_dim, bias=True)
-            self.softmax = nn.Softmax(dim=1)
 
             if weights_init:
                 self.weights_initialization()
@@ -259,8 +255,6 @@ else:
             # print(f"\nfc1-shape: {x.shape}")
             x = self.fc2(x)
             # print(f"\nfc2-shape: {x.shape}")
-            x = self.softmax(x)
-            # print(f"\nsoftmax-shape: {x.shape}")
 
             return x
     
