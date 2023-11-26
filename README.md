@@ -1,4 +1,7 @@
 # Bankruptcy-LSTM-Autoencoder
+
+[![Windows](https://img.shields.io/badge/Windows-11-blue?style=flat-square&logo=windows&logoColor=white)](https://www.microsoft.com/windows/) [![VS Code](https://img.shields.io/badge/VS%20Code-v1.61.0-007ACC?style=flat-square&logo=visual-studio-code&logoColor=white)](https://code.visualstudio.com/) [![Python](https://img.shields.io/badge/Python-03.10-blue?style=flat-square&logo=python&logoColor=white)](https://www.python.org/) [![PyTorch](https://img.shields.io/badge/PyTorch-v1.10.0-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](https://pytorch.org/) [![Matplotlib](https://img.shields.io/badge/Matplotlib-v3.4.3-FF5733?style=flat-square&logo=python&logoColor=white)](https://matplotlib.org/) [![NumPy](https://img.shields.io/badge/NumPy-v1.21.0-4C65AF?style=flat-square&logo=numpy&logoColor=white)](https://numpy.org/) [![OpenCV](https://img.shields.io/badge/OpenCV-v4.6.0-brightgreen?style=flat&logo=opencv&logoColor=white)](https://opencv.org/)
+
 Predicting corporate bankruptcy is one of the fundamental tasks in credit risk assessment. Machine learning (ML) enabled the development of several models for bankruptcy prediction. The most challenging aspect: dealing with the class imbalance due to the rarity of bankruptcy events in the real economy.
 
 The main objective of this research is to compare the performance of three different architectures employed in predicting corporate bankruptcy, by combining a classification task with an anomaly detection task (specifically: reconstruction task with LSTM-Autoencoder).
